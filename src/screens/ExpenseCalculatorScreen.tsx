@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import {
   Alert,
@@ -31,13 +31,19 @@ const fields: {
   max: number;
   presets: number[];
 }[] = [
-  { id: "dorm", label: "dormCost", icon: "bed-outline", max: 60000, presets: [15000, 25000, 45000] },
-  { id: "food", label: "foodCost", icon: "restaurant-outline", max: 120000, presets: [45000, 65000, 90000] },
-  { id: "transport", label: "transportCost", icon: "bus-outline", max: 30000, presets: [8000, 12000, 20000] },
-  { id: "materials", label: "materialsCost", icon: "book-outline", max: 35000, presets: [7000, 12000, 20000] },
-  { id: "internet", label: "internetCost", icon: "wifi-outline", max: 15000, presets: [5000, 7000, 10000] },
-  { id: "personal", label: "personalCost", icon: "wallet-outline", max: 60000, presets: [10000, 20000, 35000] },
+  { id: "dorm", label: "dormCost", icon: "bed-outline", max: 60000, presets: [10000, 10000, 10000] },
+  { id: "food", label: "foodCost", icon: "restaurant-outline", max: 120000, presets: [90000, 65000, 45000] },
+  { id: "transport", label: "transportCost", icon: "bus-outline", max: 30000, presets: [20000, 12000, 8000] },
+  { id: "materials", label: "materialsCost", icon: "book-outline", max: 35000, presets: [20000, 12000, 7000] },
+  { id: "internet", label: "internetCost", icon: "wifi-outline", max: 15000, presets: [10000, 7000, 5000] },
+  { id: "personal", label: "personalCost", icon: "wallet-outline", max: 60000, presets: [35000, 20000, 10000] },
 ];
+
+const cityNotes: Record<ExpensePresetId, string> = {
+  economy: "Астана: самый дорогой сценарий, выше питание, проезд и личные расходы.",
+  medium: "Алматы: средний сценарий, дешевле Астаны, но дороже Усть-Каменогорска.",
+  comfort: "Усть-Каменогорск: самый выгодный студенческий бюджет.",
+};
 
 export function ExpenseCalculatorScreen() {
   const navigation = useNavigation();
@@ -72,7 +78,7 @@ export function ExpenseCalculatorScreen() {
             <View>
               <Text style={styles.heroKicker}>Budget planner</Text>
               <Text style={styles.heroTitle}>{t("totalPerMonth")}</Text>
-              <Text style={styles.heroValue}>{money(total)} {t("tenge")}</Text>
+              <Text style={styles.heroValue}>{money(total)}</Text>
             </View>
             <PremiumIcon name="calculator-outline" size={62} iconSize={28} tone="cyan" />
           </View>
@@ -95,6 +101,11 @@ export function ExpenseCalculatorScreen() {
             })}
           </View>
 
+          <View style={styles.cityNote}>
+            <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+            <Text style={styles.cityNoteText}>{cityNotes[expenses.activePreset]}</Text>
+          </View>
+
           <Section title="Категории расходов">
             <View style={styles.categoryList}>
               {fields.map((field) => {
@@ -106,12 +117,12 @@ export function ExpenseCalculatorScreen() {
                       <PremiumIcon name={field.icon} size={42} iconSize={19} tone={field.id === "dorm" ? "orange" : "blue"} />
                       <View style={styles.flex}>
                         <Text style={styles.categoryTitle}>{t(field.label)}</Text>
-                        <Text style={styles.categoryMeta}>{money(value)} {t("tenge")} / месяц</Text>
+                        <Text style={styles.categoryMeta}>{money(value)} / месяц</Text>
                       </View>
                       <View style={styles.inputWrap}>
                         <TextInput
-                          value={expenses.values[field.id]}
-                          onChangeText={(value) => expenseStore.setField(field.id, value)}
+                          value={expenses.values[field.id] ? money(expenses.values[field.id]) : ""}
+                          onChangeText={(text) => expenseStore.setField(field.id, text.replace(/\D/g, ""))}
                           keyboardType="number-pad"
                           style={styles.input}
                         />
@@ -124,9 +135,16 @@ export function ExpenseCalculatorScreen() {
                       <TouchableOpacity style={styles.stepButton} onPress={() => setNumber(field.id, value - 1000)}>
                         <Ionicons name="remove" size={16} color={colors.primary} />
                       </TouchableOpacity>
-                      {field.presets.map((preset) => (
-                        <TouchableOpacity key={preset} style={styles.quickButton} onPress={() => setNumber(field.id, preset)}>
-                          <Text style={styles.quickText}>{money(preset)}</Text>
+                      {(field.id === "dorm"
+                        ? getDormPresets(expenses.activePreset, t)
+                        : field.presets.map((p) => ({ label: money(p), value: p }))
+                      ).map((p, idx) => (
+                        <TouchableOpacity
+                          key={`${field.id}-${idx}`}
+                          style={styles.quickButton}
+                          onPress={() => setNumber(field.id, p.value)}
+                        >
+                          <Text style={styles.quickText}>{p.label}</Text>
                         </TouchableOpacity>
                       ))}
                       <TouchableOpacity style={styles.stepButton} onPress={() => setNumber(field.id, value + 1000)}>
@@ -172,9 +190,9 @@ export function ExpenseCalculatorScreen() {
           <Section title="Советы по экономии">
             <View style={styles.tipsGrid}>
               {[
-                "Покупайте учебные материалы совместно с группой.",
-                "Планируйте питание на неделю и отслеживайте мелкие расходы.",
-                "Используйте студенческие скидки и общественный транспорт.",
+                "В Астане закладывайте больший бюджет на питание, транспорт и личные расходы.",
+                "Алматы обычно ближе к среднему сценарию: ниже Астаны, но выше Усть-Каменогорска.",
+                "В Усть-Каменогорске студенческий бюджет заметно выгоднее, особенно по питанию и проезду.",
               ].map((tip) => (
                 <View key={tip} style={styles.tipCard}>
                   <Ionicons name="bulb-outline" size={18} color={colors.primary} />
@@ -184,13 +202,13 @@ export function ExpenseCalculatorScreen() {
             </View>
           </Section>
 
-          <Section title="Сравнение сценариев">
+          <Section title="Сравнение городов">
             <View style={styles.scenarioRow}>
               {(["economy", "medium", "comfort"] as ExpensePresetId[]).map((preset) => (
                 <TouchableOpacity key={preset} style={styles.scenarioCard} onPress={() => expenseStore.applyPreset(preset)}>
-                  <Text style={styles.scenarioTitle}>{t(preset)}</Text>
+                  <Text style={styles.scenarioTitle} numberOfLines={1}>{t(preset)}</Text>
                   <Text style={styles.scenarioValue}>
-                    {money(Object.values(requirePreset(preset)).reduce((sum, raw) => sum + Number(raw), 0))}
+                    {money(expenseTotal(expenses.allCityValues[preset]))}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -211,26 +229,29 @@ export function ExpenseCalculatorScreen() {
   );
 }
 
-function requirePreset(preset: ExpensePresetId) {
-  const presets = {
-    economy: { dorm: "15000", food: "45000", transport: "8000", materials: "7000", internet: "5000", personal: "10000" },
-    medium: { dorm: "25000", food: "65000", transport: "12000", materials: "12000", internet: "7000", personal: "20000" },
-    comfort: { dorm: "45000", food: "90000", transport: "20000", materials: "20000", internet: "10000", personal: "35000" },
-  };
-  return presets[preset];
-}
-
 function TotalBox({ label, value }: { label: string; value: number }) {
   return (
     <View style={styles.totalBox}>
       <Text style={styles.totalBoxLabel}>{label}</Text>
-      <Text style={styles.totalBoxValue}>{money(value)} ₸</Text>
+      <Text style={styles.totalBoxValue}>{money(value)}</Text>
     </View>
   );
 }
 
 function money(value: number | string) {
-  return new Intl.NumberFormat("ru-RU").format(Number(value || 0));
+  return new Intl.NumberFormat("ru-RU").format(Number(value || 0)) + " ₸";
+}
+
+function getDormPresets(presetId: ExpensePresetId, t: (key: TranslationKey) => string) {
+  if (presetId === "comfort") {
+    return [
+      { label: t("dorm1"), value: 10000 },
+      { label: t("dorm2"), value: 10000 },
+      { label: t("dorm3"), value: 10000 },
+    ];
+  }
+  const vals = presetId === "economy" ? [40000, 60000, 80000] : [30000, 45000, 60000];
+  return vals.map((v) => ({ label: money(v), value: v }));
 }
 
 const styles = StyleSheet.create({
@@ -315,6 +336,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   presetTextActive: { color: colors.white },
+  cityNote: {
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 20,
+    padding: 12,
+    ...shadows.soft,
+  },
+  cityNoteText: {
+    color: colors.muted,
+    flex: 1,
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    lineHeight: 17,
+  },
   categoryList: { gap: 12 },
   categoryCard: {
     backgroundColor: colors.card,
@@ -494,7 +534,7 @@ const styles = StyleSheet.create({
   scenarioTitle: {
     color: colors.muted,
     fontFamily: typography.family.medium,
-    fontSize: 11,
+    fontSize: 10,
   },
   scenarioValue: {
     color: colors.foreground,

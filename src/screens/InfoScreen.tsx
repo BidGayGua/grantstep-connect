@@ -1,11 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
+import LinearGradient from "react-native-linear-gradient";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Image,
   ImageBackground,
   Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,26 +16,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 
-import type { RootStackParamList } from "../../App";
-import campus from "../assets/campus.jpg";
-import dorm from "../assets/dorm.jpg";
-import labs from "../assets/spec-ai.jpg";
-import architecture from "../assets/spec-architecture.jpg";
-import energy from "../assets/spec-energy.jpg";
-import isImage from "../assets/spec-is.jpg";
-import metallurgy from "../assets/spec-metallurgy.jpg";
-import software from "../assets/spec-software.jpg";
+import type { RootStackParamList } from "../navigation/types";
+import img7 from "../assets/7.jpeg";
+import img8 from "../assets/8.jpeg";
+import img9 from "../assets/9.jpeg";
+import img10 from "../assets/10.jpeg";
+import img13 from "../assets/13.jpg";
+import img15 from "../assets/15.jpg";
 import { Screen, Stack } from "../components/Screen";
 import { Section } from "../components/Section";
-import { useI18n, type Language, type TranslationKey } from "../i18n";
+import { useI18n, type Language } from "../i18n";
 import { colors, shadows, typography } from "../theme";
 
-export type InfoKind = "about" | "dorm" | "labs" | "parents" | "city" | "faq";
-
 const siteUrl = "https://ektu.kz/";
-const galleryImages = [campus, labs, architecture, energy, isImage, metallurgy, software];
-const dormGallery = [dorm, campus, architecture, labs, energy];
 
 const content = {
   ru: {
@@ -50,16 +48,59 @@ const content = {
     readyText: "Выберите направление и начните подготовку документов прямо сейчас.",
     chooseSpecialty: "Выбрать специальность",
     submitDocs: "Подать документы",
-    dormTitle: "Общежитие",
-    dormLead:
-      "Общежития ВКТУ помогают студентам жить рядом с учебным корпусом, экономить бюджет и быстрее адаптироваться к университетской среде.",
-    aboutDorm: "О общежитии",
-    roomTypes: "Типы комнат",
-    available: "Что доступно студентам",
-    howGetPlace: "Как получить место",
-    dormMap: "Карта общежитий",
-    dormFaq: "Частые вопросы",
-    dormCta: "Подать заявку на общежитие",
+    dormTitle: "Условия проживания",
+    dormHeroTitle: "Дома студентов ВКТУ",
+    dormHeroText: "Премиальный комфорт и современная экосистема для вашей успешной учебы.",
+    dormNewHome: "Ваш новый дом",
+    dormAdvantage1Title: "Элитный комфорт",
+    dormAdvantage1Text: "Новая эргономичная мебель, ортопедические матрасы, свежий ремонт и продуманное зонирование.",
+    dormAdvantage2Title: "Умный кампус",
+    dormAdvantage2Text: "Высокоскоростной Wi-Fi на всей территории, современные прачечные самообслуживания.",
+    dormAdvantage3Title: "Кулинарные зоны",
+    dormAdvantage3Text: "Просторные кухни с индукционными плитами, микроволновками и индивидуальными зонами.",
+    dormCalcTitle: "Рассчитать стоимость проживания",
+    dormCalcType: "Тип размещения",
+    dormCalc2Bed: "2-местная",
+    dormCalc3Bed: "3-местная",
+    dormCalcPeriod: "Период проживания",
+    dormCalcSemester: "Семестр (5 мес.)",
+    dormCalcYear: "Учебный год (10 мес.)",
+    dormTotalLabel: "Итого к оплате:",
+    dormTotalNotice: "* цена актуальна на 2024-2025 учебный год",
+    dormSafetyTitle: "Безопасность и контроль",
+    dormSafety1Title: "Круглосуточная охрана 24/7",
+    dormSafety1Text: "Профессиональная служба безопасности и видеонаблюдение во всех корпусах.",
+    dormSafety2Title: "Пропускная система",
+    dormSafety2Text: "Вход в Дом студентов осуществляется строго по индивидуальным бесконтактным картам.",
+    dormFooterTitle: "Остались вопросы?",
+    dormFooterText: "Обратитесь в Ситуационный центр ВКТУ:",
+    dormDocsTitle: "Необходимые документы",
+    dormDocsLead: "Для заселения необходимо подготовить пакет документов и подать заявление через портал вуза.",
+    dormDoc1: "Заявление (через личный кабинет)",
+    dormDoc2: "Копия удостоверения личности",
+    dormDoc3: "Медицинская справка 075/у",
+    dormDoc4: "Фото 3х4 (4 штуки)",
+    dormDoc5: "Подтверждение льгот (при наличии)",
+    dormStepsTitle: "Как получить место?",
+    dormSteps: [
+      "Подача заявления онлайн",
+      "Рассмотрение комиссии",
+      "Получение направления",
+      "Оплата проживания",
+      "Заселение в корпус",
+    ],
+    dormAmenitiesTitle: "Удобства и сервис",
+    dormVirtualTour: "Виртуальный тур",
+    dormFacilities: [
+      { icon: "wifi", title: "Free Wi-Fi" },
+      { icon: "shirt", title: "Прачечные" },
+      { icon: "library", title: "Коворкинги" },
+      { icon: "fitness", title: "Спортзалы" },
+      { icon: "shield-checkmark", title: "Безопасность" },
+      { icon: "restaurant", title: "Кухни" },
+    ],
+    dormReady: "Приемная комиссия ВКТУ",
+    dormReadyText: "Подайте электронное заявление на общежитие онлайн или свяжитесь с нами напрямую для консультации.",
     faqTitle: "FAQ",
     faqLead: "Быстрые ответы на вопросы абитуриентов и родителей.",
     searchPlaceholder: "Введите вопрос...",
@@ -69,6 +110,23 @@ const content = {
     call: "Позвонить",
     write: "Написать",
     openSite: "Открыть сайт",
+    studentLife: [
+      { icon: "calendar", title: "Мероприятия", text: "Форумы, конференции, конкурсы и карьерные встречи." },
+      { icon: "people", title: "Клубы", text: "Студенческие объединения по интересам и проектам." },
+      { icon: "fitness", title: "Спорт", text: "Секции, турниры и активная кампусная жизнь." },
+      { icon: "heart", title: "Волонтерство", text: "Социальные проекты и помощь городскому сообществу." },
+    ],
+    faqData: [
+      ["Поступление", "Какие документы нужны для поступления?", "Удостоверение личности, аттестат с приложением, сертификат ЕНТ, медицинская справка 075у и 4 фото 3x4."],
+      ["Гранты", "Как получить внутренний грант ВКТУ?", "Внутренние гранты присуждаются на основе баллов ЕНТ и достижений в олимпиадах университета."],
+      ["Общежитие", "Как подать заявку на общежитие?", "Заявка подается через личный кабинет студента или в отделе размещения после зачисления."],
+      ["ЕНТ", "Какой проходной балл в 2024 году?", "Для технических специальностей пороговый балл составляет 50, включая не менее 5 баллов по каждому предмету."],
+      ["Документы", "Можно ли подать документы онлайн?", "Да, через портал eGov или информационную систему университета в период приемной кампании."],
+      ["Специальности", "Есть ли в ВКТУ двойной диплом?", "Да, университет сотрудничает с вузами Германии, России и Китая по программам двойного диплома."],
+      ["Общежитие", "Сколько стоит проживание в общежитии?", "Стандартная стоимость проживания составляет 10 000 тенге в месяц. Для студентов из многодетных семей и первокурсников из южных/западных регионов Казахстана действует льготная цена — 5 000 тенге в месяц. Студенты-сироты и лица с инвалидностью освобождаются от оплаты."],
+      ["Гранты", "Как работает Сельская квота (Ауыл квотасы)?", "Для абитуриентов из сельской местности выделяется до 30% от общего количества государственных грантов на технические и IT-специальности. Конкурс для таких кандидатов проводится отдельно, что повышает шансы на поступление."],
+      ["Поступление", "Что делать, если не хватило баллов на госгрант?", "Вы можете подать заявление на внутренний Грант Ректора ВКТУ, претендовать на целевые гранты местных акиматов (образовательные гранты от региона) или заключить договор на финансирование обучения от крупных промышленных компаний-партнеров вуза."],
+    ],
   },
   kk: {
     aboutTitle: "ВКТУ туралы",
@@ -85,16 +143,59 @@ const content = {
     readyText: "Бағытты таңдап, құжат дайындауды қазір бастаңыз.",
     chooseSpecialty: "Мамандық таңдау",
     submitDocs: "Құжат тапсыру",
-    dormTitle: "Жатақхана",
-    dormLead:
-      "ВКТУ жатақханалары студенттерге оқу корпусына жақын тұруға, бюджет үнемдеуге және университет ортасына тез бейімделуге көмектеседі.",
-    aboutDorm: "Жатақхана туралы",
-    roomTypes: "Бөлме түрлері",
-    available: "Студенттерге қолжетімді",
-    howGetPlace: "Орынды қалай алуға болады",
-    dormMap: "Жатақханалар картасы",
-    dormFaq: "Жиі сұрақтар",
-    dormCta: "Жатақханаға өтініш беру",
+    dormTitle: "Тұру жағдайлары",
+    dormHeroTitle: "ВКТУ студенттер үйлері",
+    dormHeroText: "Сіздің сәтті оқуыңыз үшін премиум жайлылық пен заманауи экожүйе.",
+    dormNewHome: "Сіздің жаңа үйіңіз",
+    dormAdvantage1Title: "Элиталық жайлылық",
+    dormAdvantage1Text: "Жаңа эргономикалық жиһаз, ортопедиялық матрацтар, жаңа жөндеу және ойластырылған аймақтар.",
+    dormAdvantage2Title: "Ақылды кампус",
+    dormAdvantage2Text: "Барлық аумақта жоғары жылдамдықты Wi-Fi, заманауи өзіне-өзі қызмет көрсету кір жуу орындары.",
+    dormAdvantage3Title: "Аспаздық аймақтар",
+    dormAdvantage3Text: "Индукциялық плиталары, микротолқынды пештері бар кең асүйлер және жеке аймақтар.",
+    dormCalcTitle: "Тұру құнын есептеу",
+    dormCalcType: "Орналастыру түрі",
+    dormCalc2Bed: "2-орындық",
+    dormCalc3Bed: "3-орындық",
+    dormCalcPeriod: "Тұру мерзімі",
+    dormCalcSemester: "Семестр (5 ай)",
+    dormCalcYear: "Оқу жылы (10 ай)",
+    dormTotalLabel: "Төлеуге барлығы:",
+    dormTotalNotice: "* баға 2024-2025 оқу жылына өзекті",
+    dormSafetyTitle: "Қауіпсіздік және бақылау",
+    dormSafety1Title: "Тәулік бойы күзет 24/7",
+    dormSafety1Text: "Кәсіби күзет қызметі және барлық корпустарда бейнебақылау.",
+    dormSafety2Title: "Өткізу жүйесі",
+    dormSafety2Text: "Студенттер үйіне кіру қатаң түрде жеке контактісіз карталар арқылы жүзеге асырылады.",
+    dormFooterTitle: "Сұрақтарыңыз бар ма?",
+    dormFooterText: "ВКТУ Ситуациялық орталығына хабарласыңыз:",
+    dormDocsTitle: "Қажетті құжаттар",
+    dormDocsLead: "Қоныстану үшін құжаттар пакетін дайындап, жоғары оқу орнының порталы арқылы өтініш беру қажет.",
+    dormDoc1: "Өтініш (жеке кабинет арқылы)",
+    dormDoc2: "Жеке куәлік көшірмесі",
+    dormDoc3: "075/у медициналық анықтамасы",
+    dormDoc4: "3х4 фото (4 дана)",
+    dormDoc5: "Жеңілдіктерді растау (бар болса)",
+    dormStepsTitle: "Орынды қалай алуға болады?",
+    dormSteps: [
+      "Өтінішті онлайн беру",
+      "Комиссияның қарауы",
+      "Жолдама алу",
+      "Тұру ақысын төлеу",
+      "Корпусқа қоныстану",
+    ],
+    dormAmenitiesTitle: "Ыңғайлылық пен сервис",
+    dormVirtualTour: "Виртуалды тур",
+    dormFacilities: [
+      { icon: "wifi", title: "Free Wi-Fi" },
+      { icon: "shirt", title: "Кір жуу орындары" },
+      { icon: "library", title: "Коворкингтер" },
+      { icon: "fitness", title: "Спортзалдар" },
+      { icon: "shield-checkmark", title: "Қауіпсіздік" },
+      { icon: "restaurant", title: "Асүйлер" },
+    ],
+    dormReady: "ВКТУ қабылдау комиссиясы",
+    dormReadyText: "Жатақханаға электронды өтінішті онлайн беріңіз немесе кеңес алу үшін бізге тікелей хабарласыңыз.",
     faqTitle: "FAQ",
     faqLead: "Талапкерлер мен ата-аналарға арналған жылдам жауаптар.",
     searchPlaceholder: "Сұрақ енгізіңіз...",
@@ -104,6 +205,23 @@ const content = {
     call: "Қоңырау шалу",
     write: "Жазу",
     openSite: "Сайтты ашу",
+    studentLife: [
+      { icon: "calendar", title: "Іс-шаралар", text: "Форумдар, конференциялар, конкурстар және мансаптық кездесулер." },
+      { icon: "people", title: "Клубтар", text: "Мүдделер мен жобалар бойынша студенттік бірлестіктер." },
+      { icon: "fitness", title: "Спорт", text: "Секциялар, турнирлер және белсенді кампус өмірі." },
+      { icon: "heart", title: "Волонтерлік", text: "Әлеуметтік жобалар және қала қоғамдастығына көмек." },
+    ],
+    faqData: [
+      ["Қабылдау", "Оқуға түсу үшін қандай құжаттар қажет?", "Жеке куәлік, қосымшасы бар аттестат, ҰБТ сертификаты, 075у медициналық анықтамасы және 4 фото 3x4."],
+      ["Гранттар", "ВКТУ-дың ішкі грантын қалай алуға болады?", "Ішкі гранттар ҰБТ ұпайлары мен университет олимпиадаларындағы жетістіктер негізінде беріледі."],
+      ["Жатақхана", "Жатақханаға қалай өтініш беруге болады?", "Өтініш студенттің жеке кабинеті арқылы немесе оқуға түскеннен кейін орналастыру бөлімінде беріледі."],
+      ["ҰБТ", "2024 жылы шекті балл қанша?", "Техникалық мамандықтар үшін шекті балл 50, соның ішінде әр пәннен кемінде 5 балл."],
+      ["Құжаттар", "Құжаттарды онлайн тапсыруға бола ма?", "Иә, eGov порталы немесе қабылдау науқаны кезінде университеттің ақпараттық жүйесі арқылы."],
+      ["Мамандықтар", "ВКТУ-да қос диплом бар ма?", "Иә, университет Германия, Ресей және Қытай жоғары оқу орындарымен қос диплом бағдарламалары бойынша жұмыс істейді."],
+      ["Жатақхана", "Жатақханада тұру құны қанша?", "Тұрудың стандартты құны айына 10 000 теңгені құрайды. Көпбалалы отбасылардан шыққан студенттер мен Қазақстанның оңтүстік/батыс өңірлерінен келген бірінші курс студенттері үшін 5 000 теңге көлемінде жеңілдік бағасы қарастырылған. Жетім студенттер мен мүгедектігі бар адамдар төлемнен босатылады."],
+      ["Гранттар", "Ауыл квотасы қалай жұмыс істейді?", "Ауылдық жерлерден келген талапкерлер үшін техникалық және IT-мамандықтарға мемлекеттік гранттардың жалпы санының 30%-ына дейін бөлінеді. Мұндай үміткерлер үшін конкурс бөлек өткізіледі, бұл оқуға түсу мүмкіндігін арттырады."],
+      ["Қабылдау", "Егер мемлекеттік грантқа балл жетпесе не істеу керек?", "Сіз ВКТУ Ректорының ішкі грантына өтініш бере аласыз, жергілікті әкімдіктердің нысаналы гранттарына (аймақтық білім беру гранттары) үміткер бола аласыз немесе жоғары оқу орнының ірі өнеркәсіптік серіктес компанияларынан оқуды қаржыландыруға келісімшарт жасай аласыз."],
+    ],
   },
   en: {
     aboutTitle: "About EKTU",
@@ -120,16 +238,59 @@ const content = {
     readyText: "Choose a direction and start preparing documents today.",
     chooseSpecialty: "Choose specialty",
     submitDocs: "Submit documents",
-    dormTitle: "Dormitory",
-    dormLead:
-      "EKTU dormitories help students live close to campus, manage expenses and adapt faster to university life.",
-    aboutDorm: "About the dormitory",
-    roomTypes: "Room types",
-    available: "Available to students",
-    howGetPlace: "How to get a place",
-    dormMap: "Dormitory map",
-    dormFaq: "Common questions",
-    dormCta: "Apply for dormitory",
+    dormTitle: "Living Conditions",
+    dormHeroTitle: "EKTU Students' Houses",
+    dormHeroText: "Premium comfort and modern ecosystem for your successful studies.",
+    dormNewHome: "Your new home",
+    dormAdvantage1Title: "Elite Comfort",
+    dormAdvantage1Text: "New ergonomic furniture, orthopedic mattresses, fresh renovation and smart zoning.",
+    dormAdvantage2Title: "Smart Campus",
+    dormAdvantage2Text: "High-speed Wi-Fi throughout the territory, modern self-service laundries.",
+    dormAdvantage3Title: "Culinary Zones",
+    dormAdvantage3Text: "Spacious kitchens with induction hobs, microwaves and individual zones.",
+    dormCalcTitle: "Calculate Living Cost",
+    dormCalcType: "Accommodation Type",
+    dormCalc2Bed: "2-bed room",
+    dormCalc3Bed: "3-bed room",
+    dormCalcPeriod: "Living Period",
+    dormCalcSemester: "Semester (5 months)",
+    dormCalcYear: "Academic Year (10 months)",
+    dormTotalLabel: "Total to pay:",
+    dormTotalNotice: "* price valid for 2024-2025 academic year",
+    dormSafetyTitle: "Safety and Control",
+    dormSafety1Title: "24/7 Security",
+    dormSafety1Text: "Professional security service and video surveillance in all buildings.",
+    dormSafety2Title: "Access System",
+    dormSafety2Text: "Entry to the Students' House is strictly by individual contactless cards.",
+    dormFooterTitle: "Have questions?",
+    dormFooterText: "Contact the EKTU Situation Center:",
+    dormDocsTitle: "Required Documents",
+    dormDocsLead: "To move in, you need to prepare a package of documents and submit an application through the university portal.",
+    dormDoc1: "Application (via personal account)",
+    dormDoc2: "Copy of ID card",
+    dormDoc3: "Medical certificate 075/u",
+    dormDoc4: "3x4 photos (4 pcs.)",
+    dormDoc5: "Confirmation of benefits (if any)",
+    dormStepsTitle: "How to get a room?",
+    dormSteps: [
+      "Online application",
+      "Committee review",
+      "Receive referral",
+      "Accommodation payment",
+      "Moving in",
+    ],
+    dormAmenitiesTitle: "Amenities & Service",
+    dormVirtualTour: "Virtual Tour",
+    dormFacilities: [
+      { icon: "wifi", title: "Free Wi-Fi" },
+      { icon: "shirt", title: "Laundries" },
+      { icon: "library", title: "Coworkings" },
+      { icon: "fitness", title: "Gyms" },
+      { icon: "shield-checkmark", title: "Security" },
+      { icon: "restaurant", title: "Kitchens" },
+    ],
+    dormReady: "EKTU Admissions Office",
+    dormReadyText: "Submit an online application for the dormitory or contact us directly for a consultation.",
     faqTitle: "FAQ",
     faqLead: "Fast answers for applicants and parents.",
     searchPlaceholder: "Enter your question...",
@@ -139,144 +300,104 @@ const content = {
     call: "Call",
     write: "Write",
     openSite: "Open site",
+    studentLife: [
+      { icon: "calendar", title: "Events", text: "Forums, conferences, competitions and career meetings." },
+      { icon: "people", title: "Clubs", text: "Student associations based on interests and projects." },
+      { icon: "fitness", title: "Sports", text: "Sections, tournaments and active campus life." },
+      { icon: "heart", title: "Volunteering", text: "Social projects and help for the urban community." },
+    ],
+    faqData: [
+      ["Admission", "What documents are needed for admission?", "ID card, certificate with supplement, UNT certificate, medical certificate 075u and 4 photos 3x4."],
+      ["Grants", "How to get an EKTU internal grant?", "Internal grants are awarded based on UNT scores and achievements in university Olympiads."],
+      ["Dormitory", "How to apply for a dormitory?", "Application is submitted via student portal or at the accommodation department after admission."],
+      ["UNT", "What is the threshold score in 2024?", "For technical specialties, the threshold is 50, with at least 5 points in each subject."],
+      ["Documents", "Can documents be submitted online?", "Yes, via eGov portal or the university information system during the admission period."],
+      ["Specialties", "Does EKTU have double degree programs?", "Yes, the university cooperates with universities in Germany, Russia and China for double degree programs."],
+      ["Dormitory", "How much does it cost to live in the dormitory?", "The standard cost of living is 10,000 tenge per month. For students from large families and freshmen from southern/western regions of Kazakhstan, there is a discounted price of 5,000 tenge per month. Orphan students and persons with disabilities are exempt from payment."],
+      ["Grants", "How does the Rural Quota work?", "For applicants from rural areas, up to 30% of the total number of state grants for technical and IT specialties are allocated. The competition for such candidates is held separately, which increases the chances of admission."],
+      ["Admission", "What to do if there are not enough points for a state grant?", "You can apply for the internal EKTU Rector's Grant, claim target grants from local administrations (regional educational grants), or conclude an agreement for financing studies from large industrial partner companies of the university."],
+    ],
   },
 } as const;
 
+
+type InfoContent = typeof content["ru"];
+
 const history = [
-  ["1958", "Основание университета", "University foundation"],
-  ["1980", "Развитие инженерных направлений", "Engineering programs growth"],
-  ["2000", "Международное сотрудничество", "International cooperation"],
-  ["2020+", "Цифровая трансформация и современные лаборатории", "Digital transformation and modern labs"],
+  { year: "1958", ru: "Основание университета", kk: "Университеттің негізі қалануы", en: "University foundation" },
+  { year: "1980", ru: "Развитие инженерных направлений", kk: "Инженерлік бағыттардың дамуы", en: "Engineering programs growth" },
+  { year: "2000", ru: "Международное сотрудничество", kk: "Халықаралық ынтымақтастық", en: "International cooperation" },
+  { year: "2020+", ru: "Цифровая трансформация и современные лаборатории", kk: "Цифрлық трансформация және заманауи зертханалар", en: "Digital transformation and modern labs" },
 ] as const;
 
 const stats = [
-  { icon: "people", value: "9 000+", ru: "Студенты", en: "Students" },
-  { icon: "person", value: "600+", ru: "Преподаватели", en: "Teachers" },
-  { icon: "business", value: "6", ru: "Факультеты", en: "Faculties" },
-  { icon: "library", value: "30+", ru: "Кафедры", en: "Departments" },
-  { icon: "globe", value: "40+", ru: "Международные программы", en: "International programs" },
-  { icon: "trophy", value: "100+", ru: "Достижения", en: "Achievements" },
+  { icon: "people", value: "7 500+", ru: "Студенты", kk: "Студенттер", en: "Students" },
+  { icon: "person", value: "500+", ru: "Преподаватели", kk: "Оқытушылар", en: "Teachers" },
+  { icon: "business", value: "5", ru: "Факультеты", kk: "Факультеттер", en: "Faculties" },
+  { icon: "library", value: "30+", ru: "Кафедры", kk: "Кафедралар", en: "Departments" },
+  { icon: "globe", value: "20+", ru: "Международные программы", kk: "Халықаралық бағдарламалар", en: "International programs" },
+  { icon: "trophy", value: "ТОП-10", ru: "в Казахстане", kk: "Қазақстанда", en: "Top 10 in Kazakhstan" },
 ] as const;
 
-const aboutReasons = [
-  "Инженерное образование",
-  "IT направления",
-  "Международные программы",
-  "Бесплатное обучение при гранте",
-  "Бесплатное общежитие",
-  "Современные лаборатории",
-];
-
-const studentLife = [
-  { icon: "calendar", title: "Мероприятия", text: "Форумы, конференции, конкурсы и карьерные встречи." },
-  { icon: "people", title: "Клубы", text: "Студенческие объединения по интересам и проектам." },
-  { icon: "fitness", title: "Спорт", text: "Секции, турниры и активная кампусная жизнь." },
-  { icon: "heart", title: "Волонтерство", text: "Социальные проекты и помощь городскому сообществу." },
-] as const;
-
-const roomTypes = [
-  { title: "2-местная", image: dorm, capacity: "2", text: "Комфортный вариант для спокойной учебы и личного пространства." },
-  { title: "3-местная", image: campus, capacity: "3", text: "Практичный формат с балансом цены, общения и удобства." },
-  { title: "4-местная", image: architecture, capacity: "4", text: "Доступный вариант для грантников и активной студенческой жизни." },
-] as const;
-
-const amenities = ["Wi-Fi", "Прачечная", "Кухня", "Учебные комнаты", "Комнаты отдыха", "Охрана", "Видеонаблюдение"];
-const dormSteps = ["Подать документы", "Получить грант", "Подать заявку", "Получить место", "Заселиться"];
-const dorms = ["Общежитие №1", "Общежитие №2", "Общежитие №3"];
-
-const faqData = [
-  ["Поступление", "Сколько грантов выделяется?", "ВКТУ ежегодно получает большое количество государственных грантов. Точное число зависит от года и образовательной программы."],
-  ["ЕНТ", "Какой минимальный балл ЕНТ?", "Минимальный порог для поступления в технические направления обычно начинается от 50 баллов, но требования могут отличаться."],
-  ["Поступление", "Можно ли поступить после колледжа?", "Да, выпускники колледжей могут поступать по профильным направлениям и уточнять условия в приёмной комиссии."],
-  ["Поступление", "Можно ли перевестись?", "Да, перевод возможен при наличии академической разницы и свободных мест на выбранной программе."],
-  ["Общежитие", "Как получить общежитие?", "Нужно подать документы, подтвердить статус грантника или льготную категорию и оформить заявку на место."],
-  ["Документы", "Какие документы нужны?", "Обычно нужны удостоверение личности, аттестат, фото 3x4, медицинская справка и сертификат ЕНТ."],
-  ["Поступление", "Когда начинается прием документов?", "Приёмная кампания обычно стартует летом. Актуальные даты лучше проверять на официальном сайте ВКТУ."],
-  ["Документы", "Можно ли подать онлайн?", "Да, часть действий можно выполнить онлайн, а оригиналы документов предоставить по регламенту приёмной комиссии."],
-  ["Специальности", "Есть ли международные программы?", "Да, университет развивает академическую мобильность, стажировки и международное сотрудничество."],
-  ["Поступление", "Есть ли военная кафедра?", "Информацию о военной подготовке нужно уточнять в университете, так как условия могут меняться."],
-] as const;
-
-type InfoContent = (typeof content)[Language];
+const galleryImages = [img7, img8, img9, img10, img13, img15];
 
 export function InfoScreen() {
-  const { t, language } = useI18n();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, "Info">>();
-  const kind = route.params.kind;
-  const c = content[language];
+  const route = useRoute<RouteProp<RootStackParamList, "Info" | any>>();
+  const { language } = useI18n();
 
-  if (kind === "about") return <AboutScreen c={c} language={language} navigation={navigation} />;
-  if (kind === "dorm") return <DormScreen c={c} navigation={navigation} />;
-  if (kind === "faq") return <FaqScreen c={c} />;
+  const kind = route.params?.kind || "about";
+  const c = content[language as Language] || content.ru;
 
-  const fallbackTitle: Record<Exclude<InfoKind, "about" | "dorm" | "faq">, TranslationKey> = {
-    labs: "labs",
-    parents: "parentsTitle",
-    city: "city",
-  };
+  if (kind === "dorm") {
+    return <DormScreen navigation={navigation} c={c} />;
+  }
+
+  if (kind === "faq") {
+    return <FaqScreen c={c} />;
+  }
 
   return (
     <Screen>
       <Stack>
-        <HeaderBack title={t(fallbackTitle[kind])} onBack={() => navigation.goBack()} />
-        <View style={styles.simpleCard}>
-          <Image source={kind === "labs" ? labs : campus} style={styles.simpleImage} />
-          <Text style={styles.simpleTitle}>{t(fallbackTitle[kind])}</Text>
-          <Text style={styles.simpleText}>{t(kind === "labs" ? "advantageLabs" : "aboutLead")}</Text>
-        </View>
-      </Stack>
-    </Screen>
-  );
-}
-
-function AboutScreen({
-  c,
-  language,
-  navigation,
-}: {
-  c: InfoContent;
-  language: Language;
-  navigation: NativeStackNavigationProp<RootStackParamList>;
-}) {
-  return (
-    <Screen>
-      <Stack>
-        <HeaderBack title={c.aboutTitle} onBack={() => navigation.goBack()} />
-        <Hero image={campus} title={c.aboutHero} text={c.aboutLead} button={c.official} />
+        <HeaderBack title={c.aboutTitle} />
+        <Animated.View entering={FadeInDown.duration(600)}>
+          <Hero
+            image={img8}
+            title={c.aboutHero}
+            text={c.aboutLead}
+            button={c.official}
+            onButtonPress={() => Linking.openURL(siteUrl)}
+          />
+        </Animated.View>
 
         <Section title={c.history}>
           <View style={styles.timeline}>
-            {history.map((item) => (
-              <View key={item[0]} style={styles.timelineCard}>
-                <Text style={styles.timelineYear}>{item[0]}</Text>
-                <Text style={styles.timelineText}>{language === "en" ? item[2] : item[1]}</Text>
-              </View>
+            {history.map((item, i) => (
+              <Animated.View
+                key={item.year}
+                entering={FadeInDown.delay(200 + i * 100).duration(600)}
+                style={styles.timelineCard}
+              >
+                <Text style={styles.timelineYear}>{item.year}</Text>
+                <Text style={styles.timelineText}>{item[language as Language] || item.ru}</Text>
+              </Animated.View>
             ))}
           </View>
         </Section>
 
         <Section title={c.stats}>
           <View style={styles.statsGrid}>
-            {stats.map((item) => (
-              <View key={item.ru} style={styles.statCard}>
-                <Ionicons name={item.icon as never} size={22} color={colors.primary} />
-                <Text style={styles.statValue}>{item.value}</Text>
-                <Text style={styles.statLabel}>{language === "en" ? item.en : item.ru}</Text>
-              </View>
-            ))}
-          </View>
-        </Section>
-
-        <Section title={c.why}>
-          <View style={styles.reasonGrid}>
-            {aboutReasons.map((item, index) => (
-              <TouchableOpacity key={item} style={styles.reasonCard} activeOpacity={0.84}>
-                <View style={styles.reasonIcon}>
-                  <Ionicons name={["construct", "code-slash", "globe", "trophy", "bed", "flask"][index] as never} size={19} color={colors.primary} />
-                </View>
-                <Text style={styles.reasonText}>{item}</Text>
-              </TouchableOpacity>
+            {stats.map((item, i) => (
+              <Animated.View
+                key={item.ru}
+                entering={FadeInDown.delay(400 + i * 50).duration(600)}
+                style={styles.statCard}
+              >
+                <Ionicons name={item.icon as any} size={22} color={colors.primary} />
+                <Text style={statValueStyle()}>{item.value}</Text>
+                <Text style={styles.statLabel}>{item[language as Language] || item.ru}</Text>
+              </Animated.View>
             ))}
           </View>
         </Section>
@@ -285,115 +406,189 @@ function AboutScreen({
 
         <Section title={c.life}>
           <View style={styles.lifeGrid}>
-            {studentLife.map((item) => (
-              <View key={item.title} style={styles.lifeCard}>
-                <Ionicons name={item.icon as never} size={21} color={colors.primary} />
+            {c.studentLife.map((item, i) => (
+              <Animated.View
+                key={item.title}
+                entering={FadeInDown.delay(600 + i * 100).duration(600)}
+                style={styles.lifeCard}
+              >
+                <Ionicons name={item.icon as any} size={24} color={colors.primary} />
                 <Text style={styles.lifeTitle}>{item.title}</Text>
                 <Text style={styles.lifeText}>{item.text}</Text>
-              </View>
+              </Animated.View>
             ))}
           </View>
         </Section>
 
-        <Cta
-          title={c.ready}
-          text={c.readyText}
-          primary={c.chooseSpecialty}
-          secondary={c.submitDocs}
-          onPrimary={() => navigation.navigate("Tabs", { screen: "Specialties" })}
-          onSecondary={() => navigation.navigate("Tabs", { screen: "Documents" })}
-        />
+        <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+          <Cta
+            title={c.ready}
+            text={c.readyText}
+            primary={c.chooseSpecialty}
+            secondary={c.submitDocs}
+            onPrimary={() => navigation.navigate("Tabs", { screen: "Specialties" } as any)}
+            onSecondary={() => Linking.openURL(siteUrl)}
+          />
+        </Animated.View>
+        <View style={{ height: 20 }} />
       </Stack>
     </Screen>
   );
 }
 
+function statValueStyle() {
+  return styles.statValue;
+}
+
 function DormScreen({
-  c,
   navigation,
+  c,
 }: {
-  c: InfoContent;
   navigation: NativeStackNavigationProp<RootStackParamList>;
+  c: InfoContent;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <Screen>
+    <Screen contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Stack>
         <HeaderBack title={c.dormTitle} onBack={() => navigation.goBack()} />
-        <Hero image={dorm} title={c.dormTitle} text={c.dormLead} />
+        <Animated.View entering={FadeInDown.duration(600)}>
+          <Hero
+            image={img8}
+            title={c.dormHeroTitle}
+            text={c.dormHeroText}
+            button={c.dormVirtualTour}
+            onButtonPress={() => Linking.openURL("https://ektu.kz/virtualtour/index.html")}
+          />
+        </Animated.View>
 
-        <Section title={c.aboutDorm}>
-          <View style={styles.textCard}>
-            <Text style={styles.bodyText}>{c.dormLead}</Text>
-            <Text style={styles.bodyText}>Приоритет получают грантники, иногородние студенты и обучающиеся с подтверждёнными социальными основаниями.</Text>
-          </View>
-        </Section>
-
-        <Section title={c.roomTypes}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>
-            {roomTypes.map((room) => (
-              <View key={room.title} style={styles.roomCard}>
-                <Image source={room.image} style={styles.roomImage} />
-                <Text style={styles.roomTitle}>{room.title}</Text>
-                <Text style={styles.roomMeta}>{room.capacity} студента</Text>
-                <Text style={styles.roomText}>{room.text}</Text>
-              </View>
+        <Section title={c.dormNewHome}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.advantageScroll}
+          >
+            {[
+              { title: c.dormAdvantage1Title, text: c.dormAdvantage1Text, icon: "star", img: img15 },
+              { title: c.dormAdvantage2Title, text: c.dormAdvantage2Text, icon: "flash", img: img13 },
+              { title: c.dormAdvantage3Title, text: c.dormAdvantage3Text, icon: "restaurant", img: img10 },
+            ].map((item, i) => (
+              <Animated.View
+                key={i}
+                entering={FadeInRight.delay(200 + i * 150).duration(600)}
+                style={styles.advantageCard}
+              >
+                <Image source={item.img} style={styles.advantageImage} />
+                <View style={styles.advantageContent}>
+                  <View style={styles.advantageHeader}>
+                    <View style={styles.advantageIconBg}>
+                      <Ionicons name={item.icon as any} size={18} color={colors.primary} />
+                    </View>
+                    <Text style={styles.advantageTitle}>{item.title}</Text>
+                  </View>
+                  <Text style={styles.advantageText}>{item.text}</Text>
+                </View>
+              </Animated.View>
             ))}
           </ScrollView>
         </Section>
 
-        <Section title={c.available}>
-          <View style={styles.amenityGrid}>
-            {amenities.map((item, index) => (
-              <View key={item} style={styles.amenityCard}>
-                <Ionicons name={["wifi", "shirt", "restaurant", "book", "cafe", "shield-checkmark", "videocam"][index] as never} size={20} color={colors.primary} />
-                <Text style={styles.amenityText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-        </Section>
-
-        <Section title={c.howGetPlace}>
-          <View style={styles.stepsCard}>
-            {dormSteps.map((item, index) => (
-              <View key={item} style={styles.stepRow}>
-                <View style={styles.stepCircle}><Text style={styles.stepNumber}>{index + 1}</Text></View>
-                <Text style={styles.stepText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-        </Section>
-
-        <Gallery title={c.gallery} images={dormGallery} />
-
-        <Section title={c.dormMap}>
-          <View style={styles.dormMap}>
-            {dorms.map((item, index) => (
-              <View key={item} style={styles.dormMapCard}>
-                <Ionicons name="location" size={19} color={colors.primary} />
-                <View style={styles.flex}>
-                  <Text style={styles.dormName}>{item}</Text>
-                  <Text style={styles.dormAddress}>Кампус ВКТУ · корпус {index + 1}</Text>
+        <Section title={c.dormAmenitiesTitle || "Amenities"}>
+          <View style={styles.facilitiesGrid}>
+            {(c.dormFacilities as any[] || []).map((f, i) => (
+              <Animated.View
+                key={i}
+                entering={FadeInDown.delay(300 + i * 50).duration(500)}
+                style={styles.facilityItem}
+              >
+                <View style={styles.facilityIcon}>
+                  <Ionicons name={f.icon} size={20} color={colors.primary} />
                 </View>
-              </View>
+                <Text style={styles.facilityTitle}>{f.title}</Text>
+              </Animated.View>
             ))}
           </View>
         </Section>
 
-        <Section title={c.dormFaq}>
-          <View style={styles.faqMiniCard}>
-            {["Кому дают место в первую очередь?", "Можно ли жить весь учебный год?", "Есть ли Wi-Fi и кухня?"].map((q) => (
-              <View key={q} style={styles.miniQuestion}>
-                <Ionicons name="help-circle" size={18} color={colors.primary} />
-                <Text style={styles.miniQuestionText}>{q}</Text>
-              </View>
+        <Section title="Стоимость проживания">
+          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.textCard}>
+            <Text style={styles.bodyText}>
+              Стандартная стоимость проживания в общежитиях ВКТУ составляет 10 000 тенге в месяц. Для студентов из многодетных семей, а также для первокурсников из южных и западных регионов Казахстана действует льготная цена — 5 000 тенге в месяц.
+            </Text>
+          </Animated.View>
+        </Section>
+
+        <Section title={c.dormStepsTitle || "Steps"}>
+          <View style={styles.stepsCard}>
+            {((c as any).dormSteps || []).map((step: string, i: number) => (
+              <Animated.View
+                key={i}
+                entering={FadeInDown.delay(400 + i * 100).duration(500)}
+                style={styles.stepRow}
+              >
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{i + 1}</Text>
+                </View>
+                <Text style={styles.stepText}>{step}</Text>
+                {i < (c as any).dormSteps.length - 1 && <View style={styles.stepConnector} />}
+              </Animated.View>
             ))}
           </View>
         </Section>
 
-        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.84}>
-          <Text style={styles.primaryButtonText}>{c.dormCta}</Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.white} />
-        </TouchableOpacity>
+        <Section title={c.dormSafetyTitle}>
+          <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.safetyCardInfo}>
+            <View style={styles.safetyRow}>
+              <View style={styles.safetyIconCircle}>
+                <Ionicons name="shield-checkmark" size={24} color={colors.success} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.safetyTitle}>{c.dormSafety1Title}</Text>
+                <Text style={styles.safetyText}>
+                  {c.dormSafety1Text}
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.safetyRow, styles.dividerTop]}>
+              <View style={styles.safetyIconCircle}>
+                <Ionicons name="card-outline" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.safetyTitle}>{c.dormSafety2Title}</Text>
+                <Text style={styles.safetyText}>
+                  {c.dormSafety2Text}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        </Section>
+
+        <Section title={c.dormDocsTitle}>
+          <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.textCard}>
+            <Text style={styles.bodyText}>{c.dormDocsLead}</Text>
+            {[c.dormDoc1, c.dormDoc2, c.dormDoc3, c.dormDoc4, c.dormDoc5].map((doc, i) => (
+              <Animated.View
+                key={i}
+                entering={FadeInDown.delay(800 + i * 100).duration(500)}
+                style={styles.dormFeature}
+              >
+                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                <Text style={styles.featureText}>{doc}</Text>
+              </Animated.View>
+            ))}
+          </Animated.View>
+        </Section>
+
+        <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+          <Cta
+            title={c.dormReady}
+            text={c.dormReadyText}
+            primary={c.submitDocs}
+            secondary={c.call}
+            onPrimary={() => Linking.openURL(siteUrl)}
+            onSecondary={() => Linking.openURL("tel:+77072855012")}
+          />
+        </Animated.View>
       </Stack>
     </Screen>
   );
@@ -407,22 +602,22 @@ function FaqScreen({ c }: { c: InfoContent }) {
   const filtered = useMemo(() => {
     const selected = c.categories[category];
     const normalized = query.trim().toLowerCase();
-    return faqData.filter((item) => {
+    return c.faqData.filter((item) => {
       const categoryMatch = category === 0 || item[0] === selected;
       const textMatch = !normalized || `${item[1]} ${item[2]}`.toLowerCase().includes(normalized);
       return categoryMatch && textMatch;
     });
-  }, [c.categories, category, query]);
+  }, [c.categories, c.faqData, category, query]);
 
   return (
     <Screen>
       <Stack>
         <HeaderBack title={c.faqTitle} />
-        <Text style={styles.faqLead}>{c.faqLead}</Text>
-        <View style={styles.searchBox}>
+        <Animated.Text entering={FadeInDown.duration(600)} style={styles.faqLead}>{c.faqLead}</Animated.Text>
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.searchBox}>
           <Ionicons name="search" size={18} color={colors.muted} />
           <TextInput value={query} onChangeText={setQuery} placeholder={c.searchPlaceholder} placeholderTextColor={colors.muted} style={styles.searchInput} />
-        </View>
+        </Animated.View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
           {c.categories.map((item, index) => (
@@ -437,13 +632,17 @@ function FaqScreen({ c }: { c: InfoContent }) {
             {filtered.map((item, index) => {
               const opened = open === index;
               return (
-                <View key={item[1]} style={styles.accordionItem}>
+                <Animated.View
+                  key={item[1]}
+                  entering={FadeInDown.delay(200 + index * 50).duration(600)}
+                  style={styles.accordionItem}
+                >
                   <TouchableOpacity onPress={() => setOpen(opened ? null : index)} style={styles.accordionHead} activeOpacity={0.82}>
                     <Text style={styles.accordionQuestion}>{item[1]}</Text>
                     <Ionicons name={opened ? "chevron-up" : "chevron-down"} size={18} color={colors.primary} />
                   </TouchableOpacity>
                   {opened ? <Text style={styles.accordionAnswer}>{item[2]}</Text> : null}
-                </View>
+                </Animated.View>
               );
             })}
           </View>
@@ -451,26 +650,28 @@ function FaqScreen({ c }: { c: InfoContent }) {
 
         <Section title={c.popular}>
           <View style={styles.popularGrid}>
-            {faqData.slice(0, 4).map((item) => (
-              <TouchableOpacity key={item[1]} style={styles.popularCard} activeOpacity={0.84}>
-                <Ionicons name="flame" size={18} color={colors.primary} />
-                <Text style={styles.popularText}>{item[1]}</Text>
-              </TouchableOpacity>
+            {c.faqData.slice(0, 4).map((item, i) => (
+              <Animated.View key={item[1]} entering={FadeInRight.delay(400 + i * 100).duration(600)}>
+                <TouchableOpacity style={styles.popularCard} activeOpacity={0.84}>
+                  <Ionicons name="flame" size={18} color={colors.primary} />
+                  <Text style={styles.popularText}>{item[1]}</Text>
+                </TouchableOpacity>
+              </Animated.View>
             ))}
           </View>
         </Section>
 
-        <View style={styles.helpCard}>
+        <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.helpCard}>
           <Text style={styles.helpTitle}>{c.help}</Text>
-          <ContactLine icon="call" label="Приемная комиссия" value="+7 (7232) 26-74-09" />
+          <ContactLine icon="call" label="Приемная комиссия" value="+7 (707) 285-50-12" />
           <ContactLine icon="mail" label="Email" value="admission@ektu.kz" />
           <ContactLine icon="globe" label="Официальный сайт" value="ektu.kz" />
           <View style={styles.helpButtons}>
-            <SmallButton label={c.call} icon="call" onPress={() => Linking.openURL("tel:+77232267409")} />
+            <SmallButton label={c.call} icon="call" onPress={() => Linking.openURL("tel:+77072855012")} />
             <SmallButton label={c.write} icon="mail" onPress={() => Linking.openURL("mailto:admission@ektu.kz")} />
             <SmallButton label={c.openSite} icon="open" onPress={() => Linking.openURL(siteUrl)} />
           </View>
-        </View>
+        </Animated.View>
       </Stack>
     </Screen>
   );
@@ -489,7 +690,19 @@ function HeaderBack({ title, onBack }: { title: string; onBack?: () => void }) {
   );
 }
 
-function Hero({ image, title, text, button }: { image: number; title: string; text: string; button?: string }) {
+function Hero({
+  image,
+  title,
+  text,
+  button,
+  onButtonPress,
+}: {
+  image: number;
+  title: string;
+  text: string;
+  button?: string;
+  onButtonPress?: () => void;
+}) {
   return (
     <View style={styles.heroWrap}>
       <ImageBackground source={image} style={styles.hero} imageStyle={styles.heroImage}>
@@ -498,7 +711,11 @@ function Hero({ image, title, text, button }: { image: number; title: string; te
           <Text style={styles.heroTitle}>{title}</Text>
           <Text style={styles.heroText}>{text}</Text>
           {button ? (
-            <TouchableOpacity style={styles.heroButton} onPress={() => Linking.openURL(siteUrl)} activeOpacity={0.84}>
+            <TouchableOpacity
+              style={styles.heroButton}
+              onPress={onButtonPress || (() => Linking.openURL(siteUrl))}
+              activeOpacity={0.84}
+            >
               <Text style={styles.heroButtonText}>{button}</Text>
               <Ionicons name="open-outline" size={16} color={colors.primary} />
             </TouchableOpacity>
@@ -514,7 +731,12 @@ function Gallery({ title, images }: { title: string; images: number[] }) {
     <Section title={title}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
         {images.map((image, index) => (
-          <Image key={index} source={image} style={styles.galleryImage} />
+          <Animated.View
+            key={index}
+            entering={FadeInRight.delay(500 + index * 100).duration(600)}
+          >
+            <Image source={image} style={styles.galleryImage} />
+          </Animated.View>
         ))}
       </ScrollView>
     </Section>
@@ -579,17 +801,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
   },
   backButton: {
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 16,
-    borderWidth: 1,
-    height: 38,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    height: 40,
     justifyContent: "center",
-    width: 38,
+    width: 40,
     ...shadows.soft,
   },
   backTitle: {
@@ -601,13 +821,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   heroWrap: { paddingHorizontal: 20 },
   hero: {
-    borderRadius: 24,
-    height: 250,
+    borderRadius: 32,
+    height: 260,
     justifyContent: "flex-end",
     overflow: "hidden",
     ...shadows.card,
   },
-  heroImage: { borderRadius: 24 },
+  heroImage: { borderRadius: 32 },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(14,43,137,0.55)",
@@ -644,14 +864,14 @@ const styles = StyleSheet.create({
   },
   timeline: { gap: 10 },
   timelineCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
+    backgroundColor: colors.white,
+    borderRadius: 24,
     flexDirection: "row",
-    gap: 13,
-    padding: 14,
+    gap: 16,
+    padding: 20,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   timelineYear: {
     color: colors.primary,
@@ -672,13 +892,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   statCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 13,
-    width: "48%",
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 16,
+    width: "48.5%",
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   statValue: {
     color: colors.foreground,
@@ -692,32 +912,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 2,
   },
-  reasonGrid: { gap: 9 },
-  reasonCard: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 13,
-    ...shadows.soft,
-  },
-  reasonIcon: {
-    alignItems: "center",
-    backgroundColor: colors.accent,
-    borderRadius: 13,
-    height: 40,
-    justifyContent: "center",
-    width: 40,
-  },
-  reasonText: {
-    color: colors.foreground,
-    flex: 1,
-    fontFamily: typography.family.medium,
-    fontSize: 14,
-  },
   gallery: { gap: 10, paddingRight: 20 },
   galleryImage: {
     borderRadius: 18,
@@ -726,12 +920,12 @@ const styles = StyleSheet.create({
   },
   lifeGrid: { gap: 10 },
   lifeCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 14,
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 20,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   lifeTitle: {
     color: colors.foreground,
@@ -747,212 +941,148 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   ctaCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 24,
+    borderRadius: 32,
     marginHorizontal: 20,
-    padding: 18,
+    padding: 24,
     ...shadows.card,
+    backgroundColor: colors.primary,
   },
   ctaTitle: {
     color: colors.white,
     fontFamily: typography.family.bold,
     fontSize: 22,
+    textAlign: 'center',
   },
   ctaText: {
-    color: "rgba(255,255,255,0.78)",
+    color: "rgba(255,255,255,0.85)",
     fontFamily: typography.family.regular,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 5,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+    textAlign: 'center',
   },
   ctaButtons: {
     flexDirection: "row",
-    gap: 9,
-    marginTop: 14,
+    gap: 12,
+    marginTop: 20,
   },
   ctaPrimary: {
     backgroundColor: colors.white,
-    borderRadius: 15,
+    borderRadius: 20,
     flex: 1,
-    paddingVertical: 11,
+    paddingVertical: 15,
+    ...shadows.soft,
   },
   ctaPrimaryText: {
     color: colors.primary,
-    fontFamily: typography.family.medium,
-    fontSize: 12,
+    fontFamily: typography.family.bold,
+    fontSize: 15,
     textAlign: "center",
   },
   ctaSecondary: {
-    backgroundColor: "rgba(255,255,255,0.13)",
-    borderRadius: 15,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderRadius: 20,
     flex: 1,
-    paddingVertical: 11,
+    paddingVertical: 15,
   },
   ctaSecondaryText: {
     color: colors.white,
-    fontFamily: typography.family.medium,
-    fontSize: 12,
+    fontFamily: typography.family.bold,
+    fontSize: 15,
     textAlign: "center",
   },
   textCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 9,
-    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 28,
+    gap: 12,
+    padding: 20,
+    marginHorizontal: 20,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   bodyText: {
     color: colors.foreground,
     fontFamily: typography.family.regular,
     fontSize: 14,
     lineHeight: 21,
+    marginBottom: 8,
   },
-  horizontal: { gap: 10, paddingRight: 20 },
-  roomCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
+  dormFeature: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 4,
+  },
+  featureText: {
+    color: colors.foreground,
+    fontFamily: typography.family.medium,
+    fontSize: 14,
+  },
+  safetyCardInfo: {
+    backgroundColor: colors.white,
+    borderRadius: 28,
+    marginHorizontal: 20,
     overflow: "hidden",
-    width: 210,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  roomImage: { height: 105, width: "100%" },
-  roomTitle: {
+  safetyRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    padding: 16,
+  },
+  safetyTitle: {
     color: colors.foreground,
     fontFamily: typography.family.semiBold,
-    fontSize: 15,
-    paddingHorizontal: 12,
-    paddingTop: 10,
+    fontSize: 14,
   },
-  roomMeta: {
-    color: colors.primary,
-    fontFamily: typography.family.medium,
-    fontSize: 12,
-    paddingHorizontal: 12,
-    paddingTop: 2,
-  },
-  roomText: {
+  safetyText: {
     color: colors.muted,
     fontFamily: typography.family.regular,
     fontSize: 12,
     lineHeight: 17,
-    padding: 12,
-  },
-  amenityGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 9,
-  },
-  amenityCard: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 17,
-    borderWidth: 1,
-    gap: 7,
-    minHeight: 78,
-    justifyContent: "center",
-    width: "31.5%",
-    ...shadows.soft,
-  },
-  amenityText: {
-    color: colors.foreground,
-    fontFamily: typography.family.medium,
-    fontSize: 11,
-    textAlign: "center",
-  },
-  stepsCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 10,
-    padding: 14,
-    ...shadows.soft,
-  },
-  stepRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10,
-  },
-  stepCircle: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 13,
-    height: 28,
-    justifyContent: "center",
-    width: 28,
-  },
-  stepNumber: {
-    color: colors.white,
-    fontFamily: typography.family.semiBold,
-    fontSize: 12,
-  },
-  stepText: {
-    color: colors.foreground,
-    fontFamily: typography.family.medium,
-    fontSize: 13,
-  },
-  dormMap: { gap: 10 },
-  dormMapCard: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 11,
-    padding: 14,
-    ...shadows.soft,
-  },
-  dormName: {
-    color: colors.foreground,
-    fontFamily: typography.family.semiBold,
-    fontSize: 14,
-  },
-  dormAddress: {
-    color: colors.muted,
-    fontFamily: typography.family.regular,
-    fontSize: 12,
     marginTop: 2,
   },
-  faqMiniCard: {
+  dividerTop: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+  },
+  helpCardFooter: {
     backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 10,
-    padding: 14,
+    borderRadius: 24,
+    margin: 20,
+    padding: 20,
+    alignItems: "center",
     ...shadows.soft,
   },
-  miniQuestion: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 9,
-  },
-  miniQuestionText: {
+  helpTitleLight: {
     color: colors.foreground,
-    fontFamily: typography.family.medium,
+    fontFamily: typography.family.bold,
+    fontSize: 17,
+  },
+  helpTextLight: {
+    color: colors.muted,
+    fontFamily: typography.family.regular,
     fontSize: 13,
+    marginTop: 4,
   },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 18,
+  contactButtonLight: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 8,
-    justifyContent: "center",
-    marginHorizontal: 20,
-    paddingVertical: 15,
-    ...shadows.card,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginTop: 14,
   },
-  primaryButtonText: {
-    color: colors.white,
-    fontFamily: typography.family.medium,
-    fontSize: 14,
+  contactButtonTextLight: {
+    color: colors.primary,
+    fontFamily: typography.family.bold,
+    fontSize: 15,
   },
   faqLead: {
     color: colors.muted,
@@ -962,15 +1092,15 @@ const styles = StyleSheet.create({
   },
   searchBox: {
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
+    backgroundColor: colors.white,
+    borderRadius: 20,
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
     marginHorizontal: 20,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   searchInput: {
     color: colors.foreground,
@@ -984,12 +1114,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   tab: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.white,
     borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   tabActive: {
     backgroundColor: colors.primary,
@@ -1001,14 +1132,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   tabTextActive: { color: colors.white },
-  accordion: { gap: 10 },
+  accordion: { gap: 10, paddingHorizontal: 20 },
   accordionItem: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
+    backgroundColor: colors.white,
+    borderRadius: 24,
     overflow: "hidden",
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   accordionHead: {
     alignItems: "center",
@@ -1031,17 +1162,18 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     paddingHorizontal: 14,
   },
+  popular: { paddingHorizontal: 20 },
   popularGrid: { gap: 9 },
   popularCard: {
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 17,
-    borderWidth: 1,
+    backgroundColor: colors.white,
+    borderRadius: 20,
     flexDirection: "row",
-    gap: 10,
-    padding: 13,
+    gap: 12,
+    padding: 16,
     ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   popularText: {
     color: colors.foreground,
@@ -1056,6 +1188,98 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 17,
     ...shadows.card,
+  },
+  advantageScroll: {
+    paddingHorizontal: 20,
+    gap: 16,
+    paddingBottom: 10,
+  },
+  advantageCard: {
+    width: 280,
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderColor: colors.border,
+    borderWidth: 1,
+    ...shadows.soft,
+  },
+  advantageImage: {
+    width: "100%",
+    height: 140,
+  },
+  advantageContent: {
+    padding: 16,
+  },
+  advantageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  advantageIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  advantageTitle: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.foreground,
+  },
+  advantageText: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.muted,
+    lineHeight: 18,
+  },
+  safetyIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  footerInfo: {
+    marginTop: 10,
+    marginHorizontal: 20,
+    backgroundColor: colors.white,
+    borderRadius: 32,
+    padding: 24,
+    alignItems: "center",
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  footerInfoTitle: {
+    fontSize: 18,
+    fontFamily: typography.family.bold,
+    color: colors.foreground,
+  },
+  footerInfoText: {
+    fontSize: 14,
+    fontFamily: typography.family.regular,
+    color: colors.muted,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  footerPhone: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  footerPhoneText: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.primary,
   },
   helpTitle: {
     color: colors.white,
@@ -1082,6 +1306,83 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
+  facilitiesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingHorizontal: 20,
+  },
+  facilityItem: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    width: "48%",
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  facilityIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  facilityTitle: {
+    fontSize: 12,
+    fontFamily: typography.family.semiBold,
+    color: colors.foreground,
+    flex: 1,
+  },
+  stepsCard: {
+    backgroundColor: colors.white,
+    borderRadius: 32,
+    padding: 24,
+    marginHorizontal: 20,
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingVertical: 12,
+    position: "relative",
+  },
+  stepNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  stepNumberText: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+  },
+  stepText: {
+    fontSize: 14,
+    fontFamily: typography.family.medium,
+    color: colors.foreground,
+    flex: 1,
+  },
+  stepConnector: {
+    position: "absolute",
+    left: 15,
+    top: 40,
+    width: 2,
+    height: 24,
+    backgroundColor: colors.border,
+    zIndex: 1,
+  },
   smallButton: {
     alignItems: "center",
     backgroundColor: colors.white,
@@ -1096,29 +1397,5 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontFamily: typography.family.medium,
     fontSize: 11,
-  },
-  simpleCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 24,
-    borderWidth: 1,
-    marginHorizontal: 20,
-    overflow: "hidden",
-    ...shadows.card,
-  },
-  simpleImage: { height: 180, width: "100%" },
-  simpleTitle: {
-    color: colors.foreground,
-    fontFamily: typography.family.bold,
-    fontSize: 22,
-    paddingHorizontal: 16,
-    paddingTop: 15,
-  },
-  simpleText: {
-    color: colors.muted,
-    fontFamily: typography.family.regular,
-    fontSize: 14,
-    lineHeight: 21,
-    padding: 16,
   },
 });

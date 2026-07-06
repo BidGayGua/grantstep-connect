@@ -26,6 +26,5 @@ const styles = StyleSheet.create({
   title: {
     ...typography.section,
     color: colors.foreground,
-    letterSpacing: 0,
   },
 });

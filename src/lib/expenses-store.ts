@@ -12,22 +12,22 @@ export type ExpensePresetId = "economy" | "medium" | "comfort";
 
 export type ExpenseState = {
   activePreset: ExpensePresetId;
-  values: Record<ExpenseFieldId, string>;
+  cityValues: Record<ExpensePresetId, Record<ExpenseFieldId, string>>;
 };
 
-const STORAGE_KEY = "grantstep.expense-state";
+const STORAGE_KEY = "grantstep.expense-state-v2";
 
 export const expensePresets: Record<ExpensePresetId, Record<ExpenseFieldId, string>> = {
   economy: {
-    dorm: "15000",
-    food: "45000",
-    transport: "8000",
-    materials: "7000",
-    internet: "5000",
-    personal: "10000",
+    dorm: "40000",
+    food: "90000",
+    transport: "20000",
+    materials: "20000",
+    internet: "10000",
+    personal: "35000",
   },
   medium: {
-    dorm: "25000",
+    dorm: "30000",
     food: "65000",
     transport: "12000",
     materials: "12000",
@@ -35,18 +35,18 @@ export const expensePresets: Record<ExpensePresetId, Record<ExpenseFieldId, stri
     personal: "20000",
   },
   comfort: {
-    dorm: "45000",
-    food: "90000",
-    transport: "20000",
-    materials: "20000",
-    internet: "10000",
-    personal: "35000",
+    dorm: "10000",
+    food: "45000",
+    transport: "8000",
+    materials: "7000",
+    internet: "5000",
+    personal: "10000",
   },
 };
 
 const initialState: ExpenseState = {
-  activePreset: "medium",
-  values: expensePresets.medium,
+  activePreset: "comfort",
+  cityValues: { ...expensePresets },
 };
 
 let state = initialState;
@@ -79,7 +79,7 @@ async function hydrate() {
     const parsed = JSON.parse(raw) as Partial<ExpenseState>;
     state = {
       activePreset: parsed.activePreset ?? initialState.activePreset,
-      values: { ...initialState.values, ...parsed.values },
+      cityValues: parsed.cityValues ?? initialState.cityValues,
     };
     emit();
   } catch {
@@ -101,18 +101,31 @@ export const expenseStore = {
     return () => listeners.delete(listener);
   },
   setField: (id: ExpenseFieldId, value: string) => {
+    const currentValues = state.cityValues[state.activePreset];
     update({
-      activePreset: "medium",
-      values: {
-        ...state.values,
-        [id]: value.replace(/[^\d]/g, ""),
+      ...state,
+      cityValues: {
+        ...state.cityValues,
+        [state.activePreset]: {
+          ...currentValues,
+          [id]: value.replace(/[^\d]/g, ""),
+        },
       },
     });
   },
   applyPreset: (preset: ExpensePresetId) => {
     update({
+      ...state,
       activePreset: preset,
-      values: expensePresets[preset],
+    });
+  },
+  resetToDefaults: (preset: ExpensePresetId) => {
+    update({
+      ...state,
+      cityValues: {
+        ...state.cityValues,
+        [preset]: expensePresets[preset],
+      },
     });
   },
 };
@@ -122,5 +135,11 @@ export function useExpenses() {
     void hydrate();
   }, []);
 
-  return useSyncExternalStore(expenseStore.subscribe, expenseStore.get, expenseStore.get);
+  const storeState = useSyncExternalStore(expenseStore.subscribe, expenseStore.get, expenseStore.get);
+
+  return {
+    activePreset: storeState.activePreset,
+    values: storeState.cityValues[storeState.activePreset],
+    allCityValues: storeState.cityValues,
+  };
 }

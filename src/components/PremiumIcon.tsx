@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import type { ComponentProps } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -51,6 +51,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     justifyContent: "center",
-    ...shadows.soft,
   },
 });

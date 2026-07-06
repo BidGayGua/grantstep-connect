@@ -1,364 +1,442 @@
-﻿import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Alert,
+  Linking,
+} from "react-native";
 
 import { Screen, Stack } from "../components/Screen";
-import { ScreenHeader } from "../components/ScreenHeader";
 import { Section } from "../components/Section";
-import { useI18n, type TranslationKey } from "../i18n";
+import { colors, shadows, typography } from "../theme";
+import { useI18n } from "../i18n";
 import {
-  admissionStore,
-  docProgress,
-  documentsStore,
-  useDocuments,
-  type DocId,
-  type DocStatus,
-} from "../lib/documents-store";
-import { colors, shadows } from "../theme";
+  useAdmission,
+} from "../lib/admission-store";
 
-const docs: {
-  id: DocId;
-  label: TranslationKey;
-  icon: "card" | "reader" | "camera" | "heart" | "ribbon";
-}[] = [
-  { id: "id", label: "idDoc", icon: "card" },
-  { id: "att", label: "attDoc", icon: "reader" },
-  { id: "photo", label: "photoDoc", icon: "camera" },
-  { id: "med", label: "medDoc", icon: "heart" },
-  { id: "ent", label: "entDoc", icon: "ribbon" },
+type FacultyId = "it" | "mechanical" | "architecture" | "business" | "earth";
+type FeedFilter = "all" | "urgent" | "study" | "events" | "opportunities";
+
+type Faculty = {
+  id: FacultyId;
+  shortName: string;
+  name: string;
+  icon: string;
+  room: string;
+  nextClass: string;
+  deadline: string;
+};
+
+const faculties: Faculty[] = [
+  { id: "it", shortName: "facultyITShort", name: "Информационные технологии", icon: "laptop-outline", room: "Г-1, 301-318", nextClass: "10:30", deadline: "пятница, 18:00" },
+  { id: "mechanical", shortName: "facultyMechShort", name: "Машиностроение", icon: "construct-outline", room: "Б, 112-126", nextClass: "11:20", deadline: "четверг, 17:00" },
+  { id: "architecture", shortName: "facultyArchShort", name: "Архитектура и строительство", icon: "business-outline", room: "А, проектные студии", nextClass: "09:40", deadline: "пятница, 16:00" },
+  { id: "business", shortName: "facultyBusinessShort", name: "Бизнес и право", icon: "briefcase-outline", room: "В, 204-216", nextClass: "12:10", deadline: "среда, 18:00" },
+  { id: "earth", shortName: "facultyEarthShort", name: "Земля и окружающая среда", icon: "leaf-outline", room: "Е, гео-блок", nextClass: "10:00", deadline: "пятница, 15:00" },
 ];
 
-const statusLabel: Record<DocStatus, TranslationKey> = {
-  missing: "missingStatus",
-  uploaded: "uploadedStatus",
-  review: "reviewStatus",
-  approved: "approvedStatus",
-};
-
-const statusStyle: Record<DocStatus, { bg: string; color: string; icon: "cloud-upload" | "checkmark" | "time" }> = {
-  missing: { bg: colors.accent, color: colors.primary, icon: "cloud-upload" },
-  uploaded: { bg: "#eaf0ff", color: colors.primary, icon: "checkmark" },
-  review: { bg: "#fff2cc", color: colors.warning, icon: "time" },
-  approved: { bg: "#dff5e9", color: colors.success, icon: "checkmark" },
-};
+const filters: { id: FeedFilter; label: string; icon: string; color: string }[] = [
+  { id: "all", label: "filterAll", icon: "apps-outline", color: colors.primary },
+  { id: "urgent", label: "filterUrgent", icon: "flame-outline", color: colors.destructive },
+  { id: "study", label: "filterStudy", icon: "school-outline", color: colors.purple },
+  { id: "events", label: "filterEvents", icon: "calendar-outline", color: colors.orange },
+  { id: "opportunities", label: "filterOpportunities", icon: "rocket-outline", color: colors.success },
+];
 
 export function DocumentsScreen() {
   const { t } = useI18n();
-  const state = useDocuments();
-  const [uploading, setUploading] = useState<DocId | null>(null);
-  const [successOpen, setSuccessOpen] = useState(false);
-  const { done, total, percent } = docProgress(state);
-  const allDone = done === total;
+  const admission = useAdmission();
+  const [activeFaculty, setActiveFaculty] = useState<FacultyId>("it");
+  const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const uploadDocument = (id: DocId) => {
-    setUploading(id);
-    setTimeout(() => {
-      const nextStatus: DocStatus = id === "id" || id === "att" ? "review" : "uploaded";
-      documentsStore.set(id, nextStatus);
-      setUploading(null);
-    }, 650);
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const submitApplication = () => {
-    if (!allDone) return;
-    admissionStore.submitApplication();
-    setSuccessOpen(true);
+  const faculty = useMemo(
+    () => faculties.find((item) => item.id === activeFaculty) ?? faculties[0],
+    [activeFaculty],
+  );
+
+  const filteredFeed = useMemo(() => {
+    const items = [
+      {
+        id: "1",
+        type: "study" as FeedFilter,
+        title: t("feedScheduleTitle"),
+        desc: t("feedScheduleDesc").replace("{room}", faculty.room).replace("{time}", faculty.nextClass),
+        time: "10:30",
+      },
+      {
+        id: "2",
+        type: "urgent" as FeedFilter,
+        title: t("feedMilitaryTitle"),
+        desc: t("feedMilitaryDesc"),
+        time: t("filterUrgent"),
+      },
+      {
+        id: "3",
+        type: "events" as FeedFilter,
+        title: t("feedHackathonTitle"),
+        desc: t("feedHackathonDesc"),
+        time: "25 мая",
+      },
+      {
+        id: "4",
+        type: "opportunities" as FeedFilter,
+        title: t("feedInternshipTitle"),
+        desc: t("feedInternshipDesc"),
+        time: "New",
+      },
+    ];
+
+    if (activeFilter === "all") return items;
+    return items.filter((item) => item.type === activeFilter);
+  }, [activeFilter, faculty, t]);
+
+  const handleOpenCampusMap = () => {
+    Linking.openURL("https://www.ektu.kz/abouttheuniversity/virtualtours.aspx").catch(() => {
+      Alert.alert("Error", "Could not open the map");
+    });
   };
 
   return (
     <Screen>
       <Stack>
-        <ScreenHeader title={t("documentsTitle")} subtitle={t("documentsSub")} />
-
-        <View style={styles.progressCard}>
-          <View style={styles.progressTop}>
-            <View>
-              <Text style={styles.progressLabel}>{t("progress")}</Text>
-              <Text style={styles.progressValue}>{percent}%</Text>
-            </View>
-            <View style={styles.progressRight}>
-              <Text style={styles.progressSmall}>
-                {done} {t("of")} {total}
-              </Text>
-              <Text style={styles.progressStep}>{t("uploaded")}</Text>
-            </View>
+        {/* Personalized Greeting */}
+        <View style={styles.topHeader}>
+          <View>
+            <Text style={styles.greetingTitle}>{t("documentsGreeting")}</Text>
+            <Text style={styles.greetingSub}>{t("documentsGreetingSub")}</Text>
           </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${percent}%` }]} />
-          </View>
-        </View>
-
-        <Section title={t("docsChecklist")}>
-          <View style={styles.list}>
-            {docs.map((doc) => {
-              const status = state[doc.id];
-              const isDone = status !== "missing";
-              const style = statusStyle[status];
-              const isUploading = uploading === doc.id;
-
-              return (
-                <View key={doc.id} style={styles.docCard}>
-                  <View style={styles.docIcon}>
-                    <Ionicons name={doc.icon} size={22} color={colors.primary} />
-                  </View>
-                  <View style={styles.docBody}>
-                    <Text style={styles.docTitle} numberOfLines={1}>
-                      {t(doc.label)}
-                    </Text>
-                    <View style={[styles.statusPill, { backgroundColor: style.bg }]}>
-                      <Ionicons name={style.icon} size={11} color={style.color} />
-                      <Text style={[styles.statusText, { color: style.color }]}>
-                        {t(statusLabel[status])}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    disabled={isUploading}
-                    onPress={() => uploadDocument(doc.id)}
-                    style={[styles.actionButton, isDone && styles.actionButtonLight]}
-                    activeOpacity={0.82}
-                  >
-                    <Ionicons
-                      name={isDone ? "refresh" : "cloud-upload"}
-                      size={13}
-                      color={isDone ? colors.primary : colors.white}
-                    />
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        isDone && styles.actionButtonTextLight,
-                      ]}
-                    >
-                      {isUploading ? "..." : isDone ? t("replace") : t("upload")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </View>
-        </Section>
-
-        <View style={styles.submitWrap}>
-          <TouchableOpacity
-            disabled={!allDone}
-            onPress={submitApplication}
-            style={[styles.submitButton, !allDone && styles.submitButtonDisabled]}
-            activeOpacity={0.84}
-          >
-            <Ionicons name="document-text" size={18} color={colors.white} />
-            <Text style={styles.submitText}>
-              {allDone
-                ? t("submitApplication")
-                : `${t("uploadMore")} ${total - done} ${t("docsShort")}`}
-            </Text>
+          <TouchableOpacity style={styles.settingsBtn}>
+             <Ionicons name="settings-outline" size={24} color={colors.foreground} />
           </TouchableOpacity>
-          <Text style={styles.hint}>{t("submitHint")}</Text>
         </View>
 
-        <Modal transparent visible={successOpen} animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.successCard}>
-              <View style={styles.successIcon}>
-                <Ionicons name="checkmark" size={34} color={colors.white} />
-              </View>
-              <Text style={styles.successTitle}>{t("applicationSentSuccess")}</Text>
-              <TouchableOpacity
-                style={styles.successButton}
-                onPress={() => setSuccessOpen(false)}
-                activeOpacity={0.84}
-              >
-                <Text style={styles.successButtonText}>OK</Text>
-              </TouchableOpacity>
+        {/* Quick Actions Grid - Only visible/active for enrolled students */}
+        {admission.applicationStatus === "approved" && (
+          <View style={styles.gridContainer}>
+            <View style={styles.gridRow}>
+              <ActionCard icon="time" label={t("documentsSchedule")} sub={t("documentsScheduleSub")} color="#E0E7FF" iconColor="#4338CA" />
+              <ActionCard icon="book" label={t("documentsLms")} sub={t("documentsLmsSub")} color="#F0FDF4" iconColor="#15803D" />
+            </View>
+            <View style={styles.gridRow}>
+              <ActionCard icon="layers" label={t("documentsElectives")} sub={t("documentsElectivesSub")} color="#FAF5FF" iconColor="#7E22CE" />
+              <ActionCard icon="map" label={t("documentsCampus")} sub={t("documentsCampusSub")} color="#FFF7ED" iconColor="#C2410C" onPress={handleOpenCampusMap} />
             </View>
           </View>
-        </Modal>
+        )}
+
+        {/* Support Grid for Guests */}
+        {admission.applicationStatus !== "approved" && (
+          <View style={styles.gridContainer}>
+            <View style={styles.gridRow}>
+              <ActionCard icon="help-circle" label={t("documentsLms")} sub={t("documentsLmsSub")} color="#F0FDF4" iconColor="#15803D" />
+              <ActionCard icon="map" label={t("documentsCampus")} sub={t("documentsCampusSub")} color="#FFF7ED" iconColor="#C2410C" onPress={handleOpenCampusMap} />
+            </View>
+          </View>
+        )}
+
+        {/* Faculty Selector (Compact & Sticky-like) */}
+        <View style={styles.stickySection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.facultyScroll}>
+            {faculties.map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                onPress={() => setActiveFaculty(f.id)}
+                style={[styles.facultyPill, activeFaculty === f.id && styles.facultyPillActive]}
+              >
+                <Text style={[styles.facultyPillText, activeFaculty === f.id && styles.facultyPillTextActive]}>
+                  {t(f.shortName as any)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Feed Categorization Chips */}
+        <View style={styles.filterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            {filters.map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                onPress={() => setActiveFilter(f.id)}
+                style={[
+                  styles.filterChip,
+                  activeFilter === f.id && { backgroundColor: f.color, borderColor: f.color }
+                ]}
+              >
+                <Ionicons name={f.icon} size={16} color={activeFilter === f.id ? "#fff" : f.color} />
+                <Text style={[styles.filterChipText, activeFilter === f.id && { color: "#fff" }]}>
+                  {t(f.label as any)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Main Feed */}
+        <View style={styles.feedContainer}>
+          {filteredFeed.map((item) => (
+            <FeedCard
+              key={item.id}
+              type={item.type}
+              title={item.title}
+              desc={item.desc}
+              time={item.time}
+            />
+          ))}
+          {filteredFeed.length === 0 && (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <Ionicons name="search-outline" size={48} color={colors.muted} />
+              <Text style={{ marginTop: 12, color: colors.muted, fontFamily: typography.family.medium }}>
+                {t("feedEmpty")}
+              </Text>
+            </View>
+          )}
+        </View>
+
+
+        <View style={{ height: 40 }} />
       </Stack>
     </Screen>
   );
 }
 
+function ActionCard({ icon, label, sub, color, iconColor, onPress }: { icon: any; label: string; sub: string; color: string; iconColor: string; onPress?: () => void }) {
+  return (
+    <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.white }]} activeOpacity={0.7} onPress={onPress}>
+      <View style={[styles.actionIconContainer, { backgroundColor: color }]}>
+        <Ionicons name={icon} size={22} color={iconColor} />
+      </View>
+      <View>
+        <Text style={styles.actionLabel}>{label}</Text>
+        <Text style={styles.actionSub}>{sub}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function FeedCard({ type, title, desc, time }: { type: FeedFilter; title: string; desc: string; time: string }) {
+  const { t } = useI18n();
+  const getIcon = () => {
+    switch(type) {
+      case 'urgent': return { name: 'flame', color: colors.destructive };
+      case 'study': return { name: 'school', color: colors.purple };
+      case 'events': return { name: 'calendar', color: colors.orange };
+      case 'opportunities': return { name: 'rocket', color: colors.success };
+      default: return { name: 'information-circle', color: colors.primary };
+    }
+  };
+  const icon = getIcon();
+
+  return (
+    <TouchableOpacity style={styles.feedCard} activeOpacity={0.8}>
+      <View style={styles.feedCardHeader}>
+        <View style={[styles.feedIconWrap, { backgroundColor: icon.color + '15' }]}>
+          <Ionicons name={icon.name} size={18} color={icon.color} />
+        </View>
+        <Text style={styles.feedTime}>{time}</Text>
+      </View>
+      <Text style={styles.feedTitle}>{title}</Text>
+      <Text style={styles.feedDesc} numberOfLines={2}>{desc}</Text>
+      <View style={styles.feedFooter}>
+        <TouchableOpacity style={styles.feedAction}>
+          <Text style={[styles.feedActionText, { color: icon.color }]}>{t("feedMore")}</Text>
+          <Ionicons name="chevron-forward" size={12} color={icon.color} />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  progressCard: {
-    backgroundColor: colors.primaryDeep,
-    borderRadius: 22,
-    marginHorizontal: 20,
-    padding: 18,
-    ...shadows.deep,
-  },
-  progressTop: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  progressLabel: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
-    fontWeight: "500",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-  progressValue: {
-    color: colors.white,
-    fontSize: 30,
-    fontWeight: "500",
-    marginTop: 4,
-  },
-  progressRight: {
-    alignItems: "flex-end",
-  },
-  progressSmall: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  progressStep: {
-    color: "rgba(255,255,255,0.76)",
-    fontSize: 12,
-  },
-  progressTrack: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 6,
-    height: 8,
-    marginTop: 14,
-    overflow: "hidden",
-  },
-  progressFill: {
-    backgroundColor: colors.white,
-    borderRadius: 6,
-    height: 8,
-  },
-  list: {
-    gap: 10,
-  },
-  docCard: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    padding: 12,
-    ...shadows.soft,
-  },
-  docIcon: {
-    alignItems: "center",
-    backgroundColor: colors.accent,
-    borderRadius: 14,
-    height: 42,
-    justifyContent: "center",
-    width: 42,
-  },
-  docBody: {
-    flex: 1,
-  },
-  docTitle: {
-    color: colors.foreground,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  statusPill: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: 11,
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: "500",
-  },
-  actionButton: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  actionButtonLight: {
-    backgroundColor: colors.secondary,
-  },
-  actionButtonText: {
-    color: colors.white,
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  actionButtonTextLight: {
-    color: colors.primary,
-  },
-  submitWrap: {
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 10,
+    marginBottom: 15,
   },
-  submitButton: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 18,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    paddingVertical: 15,
-    ...shadows.card,
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitText: {
-    color: colors.white,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  hint: {
-    color: colors.muted,
-    fontSize: 11,
-    marginTop: 9,
-    textAlign: "center",
-  },
-  modalOverlay: {
-    alignItems: "center",
-    backgroundColor: "rgba(10,18,40,0.35)",
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-  },
-  successCard: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: 22,
-    width: "100%",
-    ...shadows.card,
-  },
-  successIcon: {
-    alignItems: "center",
-    backgroundColor: colors.success,
-    borderRadius: 28,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  successTitle: {
+  greetingTitle: {
+    fontSize: 24,
+    fontFamily: typography.family.bold,
     color: colors.foreground,
-    fontSize: 17,
-    fontWeight: "500",
-    marginTop: 14,
-    textAlign: "center",
+    letterSpacing: -0.5,
   },
-  successButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    marginTop: 18,
-    paddingHorizontal: 30,
-    paddingVertical: 11,
+  flex: {
+    flex: 1,
   },
-  successButtonText: {
-    color: colors.white,
+  greetingSub: {
+    fontSize: 14,
+    color: colors.muted,
+    fontFamily: typography.family.regular,
+    marginTop: 2,
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  gridContainer: {
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 20,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionLabel: {
+    fontSize: 14,
+    fontFamily: typography.family.semiBold,
+    color: colors.foreground,
+  },
+  actionSub: {
+    fontSize: 11,
+    color: colors.muted,
+    fontFamily: typography.family.regular,
+    marginTop: 1,
+  },
+  stickySection: {
+    paddingVertical: 10,
+    backgroundColor: colors.background,
+  },
+  facultyScroll: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  facultyPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  facultyPillActive: {
+    backgroundColor: colors.foreground,
+    borderColor: colors.foreground,
+  },
+  facultyPillText: {
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: typography.family.medium,
+    color: colors.muted,
+  },
+  facultyPillTextActive: {
+    color: '#fff',
+  },
+  filterSection: {
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  filterScroll: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontFamily: typography.family.medium,
+    color: colors.foreground,
+  },
+  feedContainer: {
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  feedCard: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 20,
+    ...shadows.soft,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  feedCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  feedIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedTime: {
+    fontSize: 12,
+    fontFamily: typography.family.medium,
+    color: colors.muted,
+  },
+  feedTitle: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.foreground,
+    marginBottom: 6,
+  },
+  feedDesc: {
+    fontSize: 13,
+    color: colors.muted,
+    fontFamily: typography.family.regular,
+    lineHeight: 18,
+  },
+  feedFooter: {
+    marginTop: 14,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  feedAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  feedActionText: {
+    fontSize: 12,
+    fontFamily: typography.family.bold,
   },
 });
-

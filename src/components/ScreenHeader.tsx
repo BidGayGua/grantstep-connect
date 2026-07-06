@@ -29,7 +29,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.body,
-    marginTop: 4,
     color: colors.label,
+    lineHeight: 22,
+    marginTop: 6,
   },
 });

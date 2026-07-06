@@ -1,9 +1,11 @@
-﻿import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
 import {
+  FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,350 +13,248 @@ import {
   View,
 } from "react-native";
 
-import type { RootStackParamList } from "../../App";
-import {
-  categoryLabels,
-  specialties,
-  type Specialty,
-  type SpecialtyCategory,
-} from "../data/specialties";
-import { Screen, Stack } from "../components/Screen";
-import { ScreenHeader } from "../components/ScreenHeader";
-import { useI18n, type TranslationKey } from "../i18n";
-import { colors, shadows } from "../theme";
-
-type CategoryFilter = "all" | SpecialtyCategory;
-
-const categories: CategoryFilter[] = [
-  "all",
-  "IT",
-  "engineering",
-  "energy",
-  "construction",
-  "industry",
-  "business",
-  "environment",
-];
-
-const filterLabels: Record<CategoryFilter, TranslationKey | "IT"> = {
-  all: "all",
-  ...categoryLabels,
-};
-
-const getLabel = (value: TranslationKey | "IT", t: (key: TranslationKey) => string) =>
-  value === "IT" ? "IT" : t(value);
+import type { RootStackParamList } from "../navigation/types";
+import { faculties, specialties, type Specialty } from "../data/specialties";
+import { Screen } from "../components/Screen";
+import { colors, shadows, typography } from "../theme";
+import { useI18n } from "../i18n";
 
 export function SpecialtiesScreen() {
   const { t } = useI18n();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [selectedFacultyId, setSelectedFacultyId] = useState("all");
 
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return specialties.filter((specialty) => {
-      const categoryText = getLabel(categoryLabels[specialty.category], t);
-      const matchesCategory = category === "all" || specialty.category === category;
+  const filteredData = useMemo(() => {
+    return specialties.filter((item) => {
+      const matchesFaculty = selectedFacultyId === "all" || item.facultyId === selectedFacultyId;
+      const translatedTitle = t(item.titleKey).toLowerCase();
       const matchesSearch =
-        normalized.length === 0 ||
-        specialty.title.toLowerCase().includes(normalized) ||
-        categoryText.toLowerCase().includes(normalized);
-
-      return matchesCategory && matchesSearch;
+        translatedTitle.includes(query.toLowerCase()) ||
+        item.code.toLowerCase().includes(query.toLowerCase());
+      return matchesFaculty && matchesSearch;
     });
-  }, [category, query, t]);
+  }, [selectedFacultyId, query, t]);
 
-  const openDetails = (specialty: Specialty) => {
-    navigation.navigate("SpecialtyDetails", { id: specialty.id });
-  };
+  const renderSpecialty = ({ item }: { item: Specialty }) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate("SpecialtyDetails", { id: item.id })}
+    >
+      <Image
+        source={typeof item.imageUrl === 'string' ? { uri: item.imageUrl } : item.imageUrl}
+        style={styles.cardImage}
+        resizeMode="cover"
+      />
+      <View style={styles.cardContent}>
+        <Text style={styles.codeText}>{item.code}</Text>
+        <Text style={styles.cardTitle} numberOfLines={2}>{t(item.titleKey)}</Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.learnMore}>{t("more")}</Text>
+          <Ionicons name="arrow-forward" size={12} color={colors.primary} />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
-    <Screen>
-      <Stack>
-        <ScreenHeader title={t("specialtiesTitle")} subtitle={t("specialtiesSub")} />
+    <Screen style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t("navSpecialties")}</Text>
+        <Text style={styles.headerSubtitle}>{t("specialtiesSub")}</Text>
+      </View>
 
-        <View style={styles.searchWrap}>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color={colors.muted} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t("searchSpecialty")}
-              placeholderTextColor={colors.muted}
-              style={styles.searchInput}
-            />
-            <Ionicons name="options" size={18} color={colors.muted} />
-          </View>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={20} color={colors.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t("searchPlaceholder")}
+            value={query}
+            onChangeText={setQuery}
+            placeholderTextColor={colors.muted}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery("")}>
+              <Ionicons name="close-circle" size={18} color={colors.muted} />
+            </TouchableOpacity>
+          )}
         </View>
+      </View>
 
-        <View style={styles.categoryScroller}>
-          <View style={styles.categoryRow}>
-            {categories.map((item) => {
-              const active = item === category;
-              const label = getLabel(filterLabels[item], t);
-              return (
-                <TouchableOpacity
-                  key={item}
-                  onPress={() => setCategory(item)}
-                  style={[styles.chip, active && styles.chipActive]}
-                  activeOpacity={0.82}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.countRow}>
-          <Text style={styles.sectionTitle}>
-            {category === "all"
-              ? t("allDirections")
-              : filterLabels[category] === "IT"
-                ? "IT"
-                : getLabel(filterLabels[category], t)}
-          </Text>
-          <Text style={styles.countText}>
-            {filtered.length} {t("found")}
-          </Text>
-        </View>
-
-        <View style={styles.list}>
-          {filtered.map((specialty) => {
-            const categoryLabel = getLabel(categoryLabels[specialty.category], t);
+      <View style={styles.filterWrapper}>
+        <Text style={styles.filterTitle}>{t("facultiesTitle")}</Text>
+        <View style={styles.filterGrid}>
+          {faculties.map((faculty) => {
+            const isActive = selectedFacultyId === faculty.id;
             return (
               <TouchableOpacity
-                key={specialty.id}
-                style={styles.card}
-                onPress={() => openDetails(specialty)}
-                activeOpacity={0.86}
+                key={faculty.id}
+                onPress={() => setSelectedFacultyId(faculty.id)}
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
               >
-                <Image source={specialty.image} style={styles.cardImage} />
-                <View style={styles.cardBody}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {specialty.title}
-                  </Text>
-                  <View style={styles.metaRow}>
-                    <Meta icon="trophy" value={`${specialty.grants} ${t("grantsCount")}`} />
-                    <Meta icon="time" value={`${specialty.years} ${t("years")}`} />
-                    <Meta icon="albums" value={categoryLabel} />
-                  </View>
-                  {specialty.tag ? (
-                    <View style={styles.tag}>
-                      <Text style={styles.tagText}>{specialty.tag}</Text>
-                    </View>
-                  ) : null}
-                  <TouchableOpacity
-                    style={styles.moreButton}
-                    activeOpacity={0.82}
-                    onPress={() => openDetails(specialty)}
-                  >
-                    <Text style={styles.moreText}>{t("more")}</Text>
-                    <Ionicons name="arrow-forward" size={14} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                  {t(faculty.shortTitleKey)}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </View>
+      </View>
 
-        <View style={styles.cta}>
-          <Ionicons name="sparkles" size={22} color="rgba(255,255,255,0.86)" />
-          <Text style={styles.ctaTitle}>{t("chooseHelpTitle")}</Text>
-          <Text style={styles.ctaText}>{t("chooseHelpText")}</Text>
-          <TouchableOpacity style={styles.ctaButton} activeOpacity={0.84}>
-            <Text style={styles.ctaButtonText}>{t("chooseSpecialty")}</Text>
-          </TouchableOpacity>
-        </View>
-      </Stack>
+      <FlatList
+        data={filteredData}
+        keyExtractor={(item) => item.id}
+        renderItem={renderSpecialty}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={48} color={colors.border} />
+            <Text style={styles.emptyText}>{t("noResults")}</Text>
+          </View>
+        }
+      />
     </Screen>
   );
 }
 
-function Meta({
-  icon,
-  value,
-}: {
-  icon: "trophy" | "time" | "albums";
-  value: string;
-}) {
-  return (
-    <View style={styles.meta}>
-      <Ionicons name={icon} size={12} color={colors.primary} />
-      <Text style={styles.metaText}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  searchWrap: {
+  container: {
+    backgroundColor: "#F8FAFC",
+  },
+  header: {
     paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.foreground,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: colors.muted,
+    marginTop: 4,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   searchBox: {
-    alignItems: "center",
-    backgroundColor: colors.secondary,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    height: 48,
+    ...shadows.soft,
   },
   searchInput: {
-    color: colors.foreground,
     flex: 1,
+    marginLeft: 8,
     fontSize: 14,
-    padding: 0,
+    color: colors.foreground,
   },
-  categoryScroller: {
+  filterWrapper: {
     paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  categoryRow: {
+  filterTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.foreground,
+    marginBottom: 12,
+  },
+  filterGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
-  chip: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 13,
+  filterChip: {
+    paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  chipActive: {
+  filterChipActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  chipText: {
-    color: colors.foreground,
+  filterText: {
     fontSize: 12,
     fontWeight: "600",
+    color: "#64748B",
   },
-  chipTextActive: {
+  filterTextActive: {
     color: colors.white,
   },
-  countRow: {
-    alignItems: "center",
-    flexDirection: "row",
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 30,
+  },
+  columnWrapper: {
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    color: colors.foreground,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  countText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  list: {
-    gap: 12,
-    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   card: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 10,
-    ...shadows.soft,
-  },
-  cardImage: {
-    backgroundColor: colors.secondary,
-    borderRadius: 14,
-    height: 108,
-    width: 96,
-  },
-  cardBody: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: colors.foreground,
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  metaRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 8,
-  },
-  meta: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 3,
-  },
-  metaText: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: "500",
-  },
-  tag: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    marginTop: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  tagText: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  moreButton: {
-    alignItems: "center",
-    alignSelf: "flex-end",
-    backgroundColor: colors.secondary,
-    borderRadius: 15,
-    flexDirection: "row",
-    gap: 4,
-    marginTop: "auto",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  moreText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  cta: {
-    backgroundColor: colors.primaryDeep,
-    borderRadius: 22,
-    marginHorizontal: 20,
-    padding: 20,
-    ...shadows.deep,
-  },
-  ctaTitle: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: "500",
-    marginTop: 8,
-  },
-  ctaText: {
-    color: "rgba(255,255,255,0.78)",
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 6,
-  },
-  ctaButton: {
-    alignItems: "center",
     backgroundColor: colors.white,
     borderRadius: 20,
-    marginTop: 14,
-    paddingVertical: 12,
+    width: "48%",
+    overflow: "hidden",
+    ...shadows.soft,
+    elevation: 3,
   },
-  ctaButtonText: {
+  cardImage: {
+    width: "100%",
+    height: 100,
+    backgroundColor: "#E2E8F0",
+  },
+  cardContent: {
+    padding: 12,
+  },
+  codeText: {
+    fontSize: 10,
+    fontWeight: "800",
     color: colors.primary,
-    fontSize: 13,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.foreground,
+    marginBottom: 8,
+    lineHeight: 18,
+    height: 36,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  learnMore: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    width: "100%",
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: colors.muted,
     fontWeight: "500",
   },
 });

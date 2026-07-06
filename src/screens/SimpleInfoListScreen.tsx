@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -23,7 +23,7 @@ const scholarshipFaq = [
 ] as const;
 
 const militaryFaq = [
-  ["Когда можно поступить?", "Обычно набор проводится на старших курсах по утвержденному графику университета."],
+  ["Когда можно поступить?", "Обучение начинается со 2 курса по утвержденному графику университета."],
   ["Нужна ли медицинская комиссия?", "Да, медицинская комиссия является одним из обязательных этапов отбора."],
   ["Какие документы нужны?", "Заявление, удостоверение личности, справки, фото и документы по требованиям кафедры."],
 ] as const;
@@ -143,7 +143,7 @@ export function MilitaryDepartmentScreen() {
         <Section title="О программе">
           <View style={styles.textCard}>
             <Text style={styles.bodyText}>
-              Военная кафедра помогает студентам получить дополнительную подготовку, развить дисциплину, лидерство и прикладные навыки. Обучение проходит параллельно с основной образовательной программой по утвержденному графику.
+              Военная кафедра помогает студентам получить дополнительную подготовку, развить дисциплину, лидерство и прикладные навыки. Обучение начинается со 2 курса. Срок обучения: Лейтенант — 2.5 года, Сержант — 1.5 года.
             </Text>
           </View>
         </Section>
@@ -172,7 +172,7 @@ export function MilitaryDepartmentScreen() {
 
         <Section title="Преимущества">
           <View style={styles.cardList}>
-            {["Офицер запаса", "Дополнительные навыки", "Военная подготовка", "Преимущества при трудоустройстве"].map((item) => (
+            {["Лейтенант — 2.5 года", "Сержант — 1.5 года", "Военная подготовка", "Преимущества при трудоустройстве"].map((item) => (
               <View key={item} style={styles.benefitCard}>
                 <PremiumIcon name="ribbon-outline" size={40} iconSize={18} tone="blue" />
                 <Text style={styles.benefitText}>{item}</Text>

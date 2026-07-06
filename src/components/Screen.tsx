@@ -1,11 +1,19 @@
 import type { ReactNode } from "react";
-import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { ImageBackground, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import appPatternBackground from "../assets/app-pattern-background.png";
 
-export function Screen({ children }: { children: ReactNode }) {
+interface ScreenProps {
+  children: ReactNode;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+}
+
+export function Screen({ children, contentContainerStyle }: ScreenProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <View pointerEvents="none" style={styles.background}>
         <ImageBackground
           source={appPatternBackground}
@@ -16,23 +24,36 @@ export function Screen({ children }: { children: ReactNode }) {
         </ImageBackground>
       </View>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          },
+          contentContainerStyle,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {children}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-export function Stack({ children }: { children: ReactNode }) {
-  return <View style={styles.stack}>{children}</View>;
+interface StackProps {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}
+
+export function Stack({ children, style }: StackProps) {
+  return <View style={[styles.stack, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#EEF3FA",
+    backgroundColor: "#F6F8FC",
   },
   background: {
     ...StyleSheet.absoluteFillObject,
@@ -42,16 +63,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   patternImage: {
-    opacity: 0.34,
+    opacity: 0.16,
     resizeMode: "cover",
   },
   readabilityOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(238,243,250,0.68)",
+    backgroundColor: "rgba(246,248,252,0.88)",
   },
   content: {
     backgroundColor: "transparent",
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   stack: {
     gap: 22,
