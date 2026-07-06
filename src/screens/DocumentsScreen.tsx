@@ -124,11 +124,7 @@ export function DocumentsScreen() {
         {admission.applicationStatus === "approved" && (
           <View style={styles.gridContainer}>
             <View style={styles.gridRow}>
-              <ActionCard icon="time" label={t("documentsSchedule")} sub={t("documentsScheduleSub")} color="#E0E7FF" iconColor="#4338CA" />
               <ActionCard icon="book" label={t("documentsLms")} sub={t("documentsLmsSub")} color="#F0FDF4" iconColor="#15803D" />
-            </View>
-            <View style={styles.gridRow}>
-              <ActionCard icon="layers" label={t("documentsElectives")} sub={t("documentsElectivesSub")} color="#FAF5FF" iconColor="#7E22CE" />
               <ActionCard icon="map" label={t("documentsCampus")} sub={t("documentsCampusSub")} color="#FFF7ED" iconColor="#C2410C" onPress={handleOpenCampusMap} />
             </View>
           </View>
