@@ -897,7 +897,7 @@ const styles = StyleSheet.create({
   heroWrap: { paddingHorizontal: 20 },
   hero: {
     borderRadius: 32,
-    height: 260,
+    minHeight: 240,
     justifyContent: "flex-end",
     overflow: "hidden",
     ...shadows.card,
@@ -907,7 +907,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(14,43,137,0.55)",
   },
-  heroContent: { padding: 18 },
+  heroContent: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
   heroTitle: {
     color: colors.white,
     fontFamily: typography.family.bold,

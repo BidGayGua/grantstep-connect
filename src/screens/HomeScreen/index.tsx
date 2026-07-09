@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   hero: {
-    aspectRatio: 16 / 9,
+    minHeight: 220,
     justifyContent: "flex-end",
   },
   heroImage: {
@@ -344,8 +344,9 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     gap: 8,
-    paddingBottom: 16,
-    paddingHorizontal: 18,
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
     zIndex: 10,
   },
   heroTitle: {
