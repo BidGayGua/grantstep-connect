@@ -8,7 +8,9 @@ import type { RootStackParamList } from "../navigation/types";
 import { Screen, Stack } from "../components/Screen";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { Section } from "../components/Section";
+import { PremiumIcon } from "../components/PremiumIcon";
 import { languages, useI18n, type Language } from "../i18n";
+import { useAuth } from "../lib/auth-store";
 import { colors, shadows, typography } from "../theme";
 
 const extra = [
@@ -21,6 +23,7 @@ const extra = [
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { language, setLanguage, t } = useI18n();
+  const { isLoggedIn, user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleSupport = () => {
@@ -39,6 +42,43 @@ export function SettingsScreen() {
     <Screen>
       <Stack>
         <ScreenHeader title={t("settings")} />
+
+        {!isLoggedIn ? (
+          <TouchableOpacity
+            style={styles.authBanner}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("Auth")}
+          >
+            <View style={styles.authBannerContent}>
+              <View style={styles.authBannerText}>
+                <Text style={styles.authBannerTitle}>{t("authBannerTitle")}</Text>
+                <Text style={styles.authBannerSub}>{t("authBannerSub")}</Text>
+              </View>
+              <View style={styles.authBannerIcon}>
+                <PremiumIcon size={32} />
+              </View>
+            </View>
+            <View style={styles.authBannerButton}>
+              <Text style={styles.authBannerButtonText}>{t("login")}</Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.white} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.userCard}>
+            <View style={styles.userAvatar}>
+              <Text style={styles.userAvatarText}>
+                {user?.email?.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.flex}>
+              <Text style={styles.userEmail}>{user?.email}</Text>
+              <Text style={styles.userStatus}>{t("statusEnrolled")}</Text>
+            </View>
+            <TouchableOpacity onPress={signOut} style={styles.signOutSmall}>
+              <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.officialCard}
@@ -86,7 +126,7 @@ export function SettingsScreen() {
                 style={[styles.menuRow, index !== extra.length - 1 && styles.divider]}
                 onPress={() => {
                   if (item.target === "Info") {
-                    navigation.navigate(item.target, { tab: item.label === "dorm" ? "dorm" : "city" });
+                    navigation.navigate(item.target, { kind: item.label === "dorm" ? "dorm" : "city" });
                   } else {
                     // @ts-ignore
                     navigation.navigate(item.target);
@@ -144,6 +184,22 @@ export function SettingsScreen() {
           </View>
         </Section>
 
+        {isLoggedIn && (
+          <TouchableOpacity
+            style={styles.signOutButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              Alert.alert(t("signOut"), t("supportAlert"), [
+                { text: t("cancel"), style: "cancel" },
+                { text: t("signOut"), style: "destructive", onPress: signOut },
+              ]);
+            }}
+          >
+            <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
+            <Text style={styles.signOutText}>{t("signOut")}</Text>
+          </TouchableOpacity>
+        )}
+
         <Text style={styles.version}>GrantStep x ВКТУ · v 1.0.0</Text>
       </Stack>
     </Screen>
@@ -182,6 +238,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     marginTop: 3,
+  },
+  flex: {
+    flex: 1,
   },
   segmented: {
     backgroundColor: colors.secondary,
@@ -244,5 +303,109 @@ const styles = StyleSheet.create({
     fontSize: 11,
     paddingBottom: 8,
     textAlign: "center",
+  },
+  authBanner: {
+    backgroundColor: colors.primaryDeep,
+    marginHorizontal: 20,
+    borderRadius: 24,
+    padding: 20,
+    marginTop: 10,
+    ...shadows.deep,
+  },
+  authBannerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  authBannerText: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  authBannerTitle: {
+    ...typography.cardTitle,
+    color: colors.white,
+    fontSize: 18,
+    marginBottom: 4,
+  },
+  authBannerSub: {
+    ...typography.meta,
+    color: "rgba(255,255,255,0.7)",
+    lineHeight: 18,
+  },
+  authBannerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  authBannerButton: {
+    backgroundColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 8,
+  },
+  authBannerButtonText: {
+    ...typography.button,
+    color: colors.white,
+  },
+  userCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.card,
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 20,
+    marginTop: 10,
+    borderColor: "#c8d7ee",
+    borderWidth: 1,
+    ...shadows.soft,
+    gap: 12,
+  },
+  userAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  userAvatarText: {
+    ...typography.title,
+    fontSize: 20,
+    color: colors.primary,
+  },
+  userEmail: {
+    ...typography.cardTitle,
+    color: colors.foreground,
+  },
+  userStatus: {
+    ...typography.meta,
+    color: colors.success,
+    fontWeight: "600",
+  },
+  signOutSmall: {
+    padding: 8,
+  },
+  signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    backgroundColor: "rgba(209, 67, 67, 0.08)",
+    borderRadius: 20,
+    borderColor: "rgba(209, 67, 67, 0.2)",
+    borderWidth: 1,
+  },
+  signOutText: {
+    ...typography.button,
+    color: colors.destructive,
   },
 });

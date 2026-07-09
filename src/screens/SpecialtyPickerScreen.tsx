@@ -15,9 +15,10 @@ import {
 } from "react-native";
 
 import { Screen, Stack } from "../components/Screen";
-import { useI18n } from "../i18n";
+import { useI18n, TranslationKey } from "../i18n";
 import { colors, shadows, typography } from "../theme";
 import { useAdmission, admissionStore } from "../lib/admission-store";
+import { specialties, faculties, Specialty } from "../data/specialties";
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -25,111 +26,31 @@ if (Platform.OS === "android") {
   }
 }
 
-const COMBINATIONS = [
-  { id: "MathPhys", label: "Математика + Физика" },
-  { id: "MathInfo", label: "Математика + Информатика" },
-  { id: "GeoMath", label: "География + Математика" },
-  { id: "ChemPhys", label: "Химия + Физика" },
-];
-
-const SPECIALTIES = [
-  {
-    id: "1",
-    code: "B057",
-    name: "Информационные технологии",
-    school: "Школа информационных технологий",
-    subjects: "MathInfo",
-    minScore: 92,
-  },
-  {
-    id: "2",
-    code: "B058",
-    name: "Информационная безопасность",
-    school: "Школа информационных технологий",
-    subjects: "MathInfo",
-    minScore: 95,
-  },
-  {
-    id: "3",
-    code: "B064",
-    name: "Механика и металлообработка",
-    school: "Школа машиностроения",
-    subjects: "MathPhys",
-    minScore: 78,
-  },
-  {
-    id: "4",
-    code: "B074",
-    name: "Строительство",
-    school: "Школа архитектуры и строительства",
-    subjects: "MathPhys",
-    minScore: 82,
-  },
-  {
-    id: "5",
-    code: "B095",
-    name: "Транспортные услуги",
-    school: "Школа машиностроения",
-    subjects: "MathPhys",
-    minScore: 75,
-  },
-  {
-    id: "6",
-    code: "B060",
-    name: "Химическая технология",
-    school: "Школа наук о Земле",
-    subjects: "ChemPhys",
-    minScore: 80,
-  },
-  {
-    id: "7",
-    code: "B093",
-    name: "Логистика (в сервисе)",
-    school: "Школа бизнеса",
-    subjects: "GeoMath",
-    minScore: 85,
-  },
-  {
-    id: "8",
-    code: "B071",
-    name: "Горное дело",
-    school: "Школа наук о Земле",
-    subjects: "MathPhys",
-    minScore: 70,
-  },
-  {
-    id: "9",
-    code: "B059",
-    name: "Коммуникации и технологии связи",
-    school: "Школа информационных технологий",
-    subjects: "MathInfo",
-    minScore: 88,
-  },
-  {
-    id: "10",
-    code: "B061",
-    name: "Материаловедение и технологии",
-    school: "Школа наук о Земле",
-    subjects: "ChemPhys",
-    minScore: 72,
-  },
-];
-
 export function SpecialtyPickerScreen() {
   const navigation = useNavigation();
   const { t } = useI18n();
   const admission = useAdmission();
 
-  const [selectedCombination, setSelectedCombination] = useState<string | null>(null);
+  const [selectedCombination, setSelectedCombination] = useState<TranslationKey | null>(null);
   const [score, setScore] = useState("");
   const [showResults, setShowResults] = useState(false);
 
+  const combinations = useMemo(() => {
+    const keys = Array.from(
+      new Set(specialties.map((s) => s.subjectKey).filter((k): k is TranslationKey => !!k)),
+    );
+    return keys.map((key) => ({
+      id: key,
+      label: t(key),
+    }));
+  }, [t]);
+
   const filteredSpecialties = useMemo(() => {
     if (!selectedCombination) return [];
-    return SPECIALTIES.filter((s) => s.subjects === selectedCombination);
+    return specialties.filter((s) => s.subjectKey === selectedCombination);
   }, [selectedCombination]);
 
-  const handleSelectCombination = (id: string) => {
+  const handleSelectCombination = (id: TranslationKey) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelectedCombination(id);
     setShowResults(false);
@@ -141,31 +62,28 @@ export function SpecialtyPickerScreen() {
     setShowResults(true);
   };
 
-  const handleSelectSpecialty = (specialty: (typeof SPECIALTIES)[0]) => {
-    Alert.alert(
-      "Выбор специальности",
-      `Вы выбрали "${specialty.name}". Подтвердить?`,
-      [
-        { text: "Отмена", style: "cancel" },
-        {
-          text: "Да",
-          onPress: () => {
-            admissionStore.setSelectedSpecialty(specialty.name);
-            navigation.goBack();
-          },
+  const handleSelectSpecialty = (specialty: Specialty) => {
+    const specName = t(specialty.titleKey);
+    Alert.alert(t("confirmSelectionTitle"), t("confirmSelectionText").replace("{name}", specName), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("yes"),
+        onPress: () => {
+          admissionStore.setSelectedSpecialty(specName);
+          navigation.goBack();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const getChanceBadge = (minScore: number, userScore: number) => {
     const diff = userScore - minScore;
     if (diff >= 10) {
-      return { text: "Высокий шанс", color: "#22C55E", bg: "#DCFCE7" };
+      return { text: t("chanceHigh"), color: "#22C55E", bg: "#DCFCE7" };
     } else if (diff >= 0) {
-      return { text: "Средний шанс", color: "#EAB308", bg: "#FEF9C3" };
+      return { text: t("chanceMedium"), color: "#EAB308", bg: "#FEF9C3" };
     } else {
-      return { text: "Платное / Квота", color: "#F97316", bg: "#FFEDD5" };
+      return { text: t("chanceLow"), color: "#F97316", bg: "#FFEDD5" };
     }
   };
 
@@ -181,36 +99,30 @@ export function SpecialtyPickerScreen() {
             >
               <Ionicons name="arrow-back" size={20} color={colors.primary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Подбор специальностей</Text>
+            <Text style={styles.headerTitle}>{t("pickSpecialty")}</Text>
             <View style={styles.headerSpacer} />
           </View>
 
           {admission.selectedSpecialty && (
             <View style={styles.currentSpecialty}>
-              <Text style={styles.currentSpecialtyLabel}>Выбранная специальность:</Text>
+              <Text style={styles.currentSpecialtyLabel}>{t("selectedSpecialty")}:</Text>
               <Text style={styles.currentSpecialtyName}>{admission.selectedSpecialty}</Text>
             </View>
           )}
 
           {/* STEP 1: Subjects */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>1. Выберите комбинацию предметов</Text>
+            <Text style={styles.sectionTitle}>{t("stepSubjects")}</Text>
             <View style={styles.chipsContainer}>
-              {COMBINATIONS.map((item) => (
+              {combinations.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={[
-                    styles.chip,
-                    selectedCombination === item.id && styles.chipActive,
-                  ]}
+                  style={[styles.chip, selectedCombination === item.id && styles.chipActive]}
                   onPress={() => handleSelectCombination(item.id)}
                   activeOpacity={0.7}
                 >
                   <Text
-                    style={[
-                      styles.chipText,
-                      selectedCombination === item.id && styles.chipTextActive,
-                    ]}
+                    style={[styles.chipText, selectedCombination === item.id && styles.chipTextActive]}
                   >
                     {item.label}
                   </Text>
@@ -222,7 +134,7 @@ export function SpecialtyPickerScreen() {
           {/* STEP 2: Score */}
           {selectedCombination && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>2. Введите ваш балл ЕНТ</Text>
+              <Text style={styles.sectionTitle}>{t("stepScore")}</Text>
               <View style={styles.inputCard}>
                 <TextInput
                   style={styles.scoreInput}
@@ -241,12 +153,17 @@ export function SpecialtyPickerScreen() {
                   onPress={handleCalculate}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.calculateButtonText}>Подобрать</Text>
-                  <Ionicons name="sparkles" size={18} color={colors.white} style={{ marginLeft: 8 }} />
+                  <Text style={styles.calculateButtonText}>{t("calculate")}</Text>
+                  <Ionicons
+                    name="sparkles"
+                    size={18}
+                    color={colors.white}
+                    style={{ marginLeft: 8 }}
+                  />
                 </TouchableOpacity>
               </View>
               {score !== "" && (parseInt(score) < 50 || parseInt(score) > 140) && (
-                <Text style={styles.errorText}>Введите корректный балл (50-140)</Text>
+                <Text style={styles.errorText}>{t("invalidScore")}</Text>
               )}
             </View>
           )}
@@ -254,10 +171,15 @@ export function SpecialtyPickerScreen() {
           {/* STEP 3: Results */}
           {showResults && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Подходящие специальности ВКТУ</Text>
+              <Text style={styles.sectionTitle}>{t("matchingSpecialties")}</Text>
               {filteredSpecialties.map((item) => {
-                const badge = getChanceBadge(item.minScore, parseInt(score));
-                const isSelected = admission.selectedSpecialty === item.name;
+                const userScore = parseInt(score) || 0;
+                const badge = getChanceBadge(item.minScore || 50, userScore);
+                const specName = t(item.titleKey);
+                const isSelected = admission.selectedSpecialty === specName;
+                const faculty = faculties.find((f) => f.id === item.facultyId);
+                const schoolName = faculty ? t(faculty.shortTitleKey) : "";
+
                 return (
                   <TouchableOpacity
                     key={item.id}
@@ -267,24 +189,26 @@ export function SpecialtyPickerScreen() {
                   >
                     <View style={styles.specialtyHeader}>
                       <View style={styles.schoolBadge}>
-                        <Text style={styles.schoolText}>{item.school}</Text>
+                        <Text style={styles.schoolText}>{schoolName}</Text>
                       </View>
                       <View style={[styles.chanceBadge, { backgroundColor: badge.bg }]}>
                         <Text style={[styles.chanceText, { color: badge.color }]}>{badge.text}</Text>
                       </View>
                     </View>
                     <Text style={styles.specialtyCode}>{item.code}</Text>
-                    <Text style={styles.specialtyName}>{item.name}</Text>
+                    <Text style={styles.specialtyName}>{specName}</Text>
                     {isSelected && (
                       <View style={styles.selectedBadge}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                        <Text style={styles.selectedBadgeText}>Выбрано</Text>
+                        <Text style={styles.selectedBadgeText}>{t("uploadedStatus")}</Text>
                       </View>
                     )}
                     <View style={styles.divider} />
                     <View style={styles.cardFooter}>
-                      <Text style={styles.metaText}>Проходной балл 2023:</Text>
-                      <Text style={styles.minScoreText}>{item.minScore} б.</Text>
+                      <Text style={styles.metaText}>{t("minScoreLabel")}</Text>
+                      <Text style={styles.minScoreText}>
+                        {item.minScore} {t("pointsShort")}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 );
@@ -292,7 +216,7 @@ export function SpecialtyPickerScreen() {
               {filteredSpecialties.length === 0 && (
                 <View style={styles.emptyState}>
                   <Ionicons name="search-outline" size={48} color={colors.muted} />
-                  <Text style={styles.emptyText}>К сожалению, по данной комбинации специальностей не найдено.</Text>
+                  <Text style={styles.emptyText}>{t("noSpecialtiesFound")}</Text>
                 </View>
               )}
             </View>

@@ -33,8 +33,8 @@ export const sectionConfig: Array<{
   {
     key: "documents",
     icon: "document-text-outline",
-    labelKey: "hub",
-    navigate: (navigateToTab) => navigateToTab("Hub"),
+    labelKey: "checklist",
+    navigate: (navigateToTab) => navigateToTab("Checklist"),
   },
   {
     key: "dorm",

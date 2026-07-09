@@ -119,3 +119,12 @@ export const typography = {
     fontWeight: "400" as const,
   },
 };
+
+export const spacing = {
+  xs: 4,
+  s: 8,
+  m: 16,
+  l: 24,
+  xl: 32,
+  xxl: 48,
+};

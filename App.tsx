@@ -6,7 +6,7 @@ import { Platform, StatusBar, StyleSheet, Text, TextInput, View } from "react-na
 
 import { I18nProvider } from "./src/i18n";
 import { AdmissionScreen } from "./src/screens/AdmissionScreen";
-import { DocumentsScreen } from "./src/screens/DocumentsScreen";
+import { AuthScreen } from "./src/screens/AuthScreen";
 import { ExpenseCalculatorScreen } from "./src/screens/ExpenseCalculatorScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { InfoScreen } from "./src/screens/InfoScreen";
@@ -54,6 +54,7 @@ export default function App() {
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Tabs" component={TabsNavigator} />
+              <Stack.Screen name="Auth" component={AuthScreen} />
               <Stack.Screen name="Info" component={InfoScreen} />
               <Stack.Screen name="ExpenseCalculator" component={ExpenseCalculatorScreen} />
               <Stack.Screen name="Parents" component={ParentsScreen} />

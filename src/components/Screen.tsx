@@ -7,13 +7,14 @@ import appPatternBackground from "../assets/app-pattern-background.png";
 interface ScreenProps {
   children: ReactNode;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function Screen({ children, contentContainerStyle }: ScreenProps) {
+export function Screen({ children, contentContainerStyle, style }: ScreenProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.safe}>
+    <View style={[styles.safe, style]}>
       <View pointerEvents="none" style={styles.background}>
         <ImageBackground
           source={appPatternBackground}

@@ -32,7 +32,85 @@ import { colors, shadows, typography } from "../theme";
 
 const siteUrl = "https://ektu.kz/";
 
-const content = {
+interface DormFacility {
+  icon: string;
+  title: string;
+}
+
+interface StudentLifeItem {
+  icon: string;
+  title: string;
+  text: string;
+}
+
+interface InfoContent {
+  aboutTitle: string;
+  aboutHero: string;
+  aboutLead: string;
+  official: string;
+  history: string;
+  stats: string;
+  why: string;
+  gallery: string;
+  life: string;
+  ready: string;
+  readyText: string;
+  chooseSpecialty: string;
+  submitDocs: string;
+  dormTitle: string;
+  dormHeroTitle: string;
+  dormHeroText: string;
+  dormNewHome: string;
+  dormAdvantage1Title: string;
+  dormAdvantage1Text: string;
+  dormAdvantage2Title: string;
+  dormAdvantage2Text: string;
+  dormAdvantage3Title: string;
+  dormAdvantage3Text: string;
+  dormCalcTitle: string;
+  dormCalcType: string;
+  dormCalc2Bed: string;
+  dormCalc3Bed: string;
+  dormCalcPeriod: string;
+  dormCalcSemester: string;
+  dormCalcYear: string;
+  dormTotalLabel: string;
+  dormTotalNotice: string;
+  dormFooterTitle: string;
+  dormFooterText: string;
+  dormSafetyTitle: string;
+  dormSafety1Title: string;
+  dormSafety1Text: string;
+  dormSafety2Title: string;
+  dormSafety2Text: string;
+  dormDocsTitle: string;
+  dormDocsLead: string;
+  dormDoc1: string;
+  dormDoc2: string;
+  dormDoc3: string;
+  dormDoc4: string;
+  dormDoc5: string;
+  dormStepsTitle: string;
+  dormSteps: string[];
+  dormAmenitiesTitle: string;
+  dormVirtualTour: string;
+  dormFacilities: DormFacility[];
+  dormReady: string;
+  dormReadyText: string;
+  faqTitle: string;
+  faqLead: string;
+  searchPlaceholder: string;
+  categories: string[];
+  popular: string;
+  help: string;
+  call: string;
+  write: string;
+  openSite: string;
+  studentLife: StudentLifeItem[];
+  faqData: [string, string, string][];
+}
+
+const content: Record<Language, InfoContent> = {
   ru: {
     aboutTitle: "О ВКТУ",
     aboutHero: "Восточно-Казахстанский технический университет имени Д. Серикбаева",
@@ -320,9 +398,6 @@ const content = {
   },
 } as const;
 
-
-type InfoContent = typeof content["ru"];
-
 const history = [
   { year: "1958", ru: "Основание университета", kk: "Университеттің негізі қалануы", en: "University foundation" },
   { year: "1980", ru: "Развитие инженерных направлений", kk: "Инженерлік бағыттардың дамуы", en: "Engineering programs growth" },
@@ -495,14 +570,14 @@ function DormScreen({
 
         <Section title={c.dormAmenitiesTitle || "Amenities"}>
           <View style={styles.facilitiesGrid}>
-            {(c.dormFacilities as any[] || []).map((f, i) => (
+            {(c.dormFacilities).map((f, i) => (
               <Animated.View
                 key={i}
                 entering={FadeInDown.delay(300 + i * 50).duration(500)}
                 style={styles.facilityItem}
               >
                 <View style={styles.facilityIcon}>
-                  <Ionicons name={f.icon} size={20} color={colors.primary} />
+                  <Ionicons name={f.icon as any} size={20} color={colors.primary} />
                 </View>
                 <Text style={styles.facilityTitle}>{f.title}</Text>
               </Animated.View>
@@ -520,7 +595,7 @@ function DormScreen({
 
         <Section title={c.dormStepsTitle || "Steps"}>
           <View style={styles.stepsCard}>
-            {((c as any).dormSteps || []).map((step: string, i: number) => (
+            {c.dormSteps.map((step: string, i: number) => (
               <Animated.View
                 key={i}
                 entering={FadeInDown.delay(400 + i * 100).duration(500)}
@@ -530,7 +605,7 @@ function DormScreen({
                   <Text style={styles.stepNumberText}>{i + 1}</Text>
                 </View>
                 <Text style={styles.stepText}>{step}</Text>
-                {i < (c as any).dormSteps.length - 1 && <View style={styles.stepConnector} />}
+                {i < c.dormSteps.length - 1 && <View style={styles.stepConnector} />}
               </Animated.View>
             ))}
           </View>

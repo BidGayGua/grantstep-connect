@@ -22,6 +22,8 @@ export type Specialty = {
   descriptionKey: TranslationKey;
   facultyId: string;
   imageUrl: any;
+  subjectKey?: TranslationKey;
+  minScore?: number;
   subjectsKeys?: TranslationKey[];
   skillsKeys?: TranslationKey[];
   careerKeys?: TranslationKey[];
@@ -41,6 +43,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specISDesc",
     facultyId: "sc_ite",
     imageUrl: require("../assets/spec-is.jpg"),
+    subjectKey: "subjectMathInfo",
+    minScore: 92,
     subjectsKeys: ["specISLearn1", "specISLearn2", "specISLearn3"],
     skillsKeys: ["specISSkill1", "specISSkill2", "specISSkill3"],
     careerKeys: ["specISCareer1", "specISCareer2", "specISCareer3"],
@@ -57,6 +61,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specCompTechDesc",
     facultyId: "sc_ite",
     imageUrl: require("../assets/spec-software.jpg"),
+    subjectKey: "subjectMathInfo",
+    minScore: 94,
     subjectsKeys: ["specCTLearn1", "specCTLearn2", "specCTLearn3"],
     skillsKeys: ["specCTSkill1", "specCTSkill2", "specCTSkill3"],
     careerKeys: ["specCTCareer1", "specCTCareer2", "specCTCareer3"],
@@ -73,6 +79,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMathAIAnalyticDesc",
     facultyId: "sc_ite",
     imageUrl: require("../assets/math-model.png"),
+    subjectKey: "subjectMathInfo",
+    minScore: 90,
     subjectsKeys: ["specAILearn1", "specAILearn2", "specAILearn3"],
     skillsKeys: ["specAISkill1", "specAISkill2", "specAISkill3"],
     careerKeys: ["specAICareer1", "specAICareer2"],
@@ -89,6 +97,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specAIDesc",
     facultyId: "sc_ite",
     imageUrl: require("../assets/spec-ai.jpg"),
+    subjectKey: "subjectMathInfo",
+    minScore: 95,
     subjectsKeys: ["specAILearn1", "specAILearn2", "specAILearn3"],
     skillsKeys: ["specAISkill1", "specAISkill2", "specAISkill3"],
     careerKeys: ["specAICareer1", "specAICareer2", "specAICareer3"],
@@ -105,6 +115,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specAutomationDesc",
     facultyId: "sc_ite",
     imageUrl: "https://images.unsplash.com/photo-1518314916381-77a37c2a49ae?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     subjectsKeys: ["specMechatronicsLearn1", "specMechatronicsLearn2", "specMechatronicsLearn3"],
     careerKeys: ["specISCareer2"],
     salaryRange: {
@@ -120,6 +132,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMedEngDesc",
     facultyId: "sc_ite",
     imageUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 82,
     subjectsKeys: ["specMedEngLearn1", "specMedEngLearn2", "specMedEngLearn3"],
     careerKeys: ["specMedEngCareer1", "specMedEngCareer2"],
     salaryRange: {
@@ -135,6 +149,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specRadioDesc",
     facultyId: "sc_ite",
     imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     subjectsKeys: ["specRadioLearn1", "specRadioLearn2", "specRadioLearn3"],
     careerKeys: ["specRadioCareer1", "specRadioCareer2"],
     salaryRange: {
@@ -152,6 +168,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specArchDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/arch.jpg"),
+    subjectKey: "subjectCreative",
+    minScore: 110,
     subjectsKeys: ["specArchLearn1", "specArchLearn2", "specArchLearn3"],
     salaryRange: {
       junior: "180 000",
@@ -166,6 +184,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specArchDesignDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/spec-architecture.jpg"),
+    subjectKey: "subjectCreative",
+    minScore: 115,
     subjectsKeys: ["specArchDesignLearn1", "specArchDesignLearn2", "specArchDesignLearn3"],
     careerKeys: ["specArchDesignCareer1", "specArchDesignCareer2"],
     salaryRange: {
@@ -181,6 +201,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specConstDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/construction.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 82,
     subjectsKeys: ["specConstLearn1", "specConstLearn2", "specConstLearn3"],
     salaryRange: {
       junior: "200 000",
@@ -195,6 +217,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specRoadsDesc",
     facultyId: "as_dep",
     imageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 82,
     subjectsKeys: ["specRoadsLearn1", "specRoadsLearn2", "specRoadsLearn3"],
     careerKeys: ["specRoadsCareer1", "specRoadsCareer2"],
     salaryRange: {
@@ -210,6 +234,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMaterialsDesc",
     facultyId: "as_dep",
     imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     salaryRange: {
       junior: "160 000",
       middle: "350 000",
@@ -223,6 +249,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specElectricDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/spec-energy.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 82,
     subjectsKeys: ["specElectricLearn1", "specElectricLearn2", "specElectricLearn3"],
     salaryRange: {
       junior: "200 000",
@@ -237,6 +265,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specThermalDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/thermal.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 80,
     subjectsKeys: ["specThermalLearn1", "specThermalLearn2", "specThermalLearn3"],
     salaryRange: {
       junior: "180 000",
@@ -251,6 +281,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specNuclearDesc",
     facultyId: "as_dep",
     imageUrl: require("../assets/nuclear.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 90,
     salaryRange: {
       junior: "250 000",
       middle: "550 000",
@@ -264,6 +296,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specWaterDesc",
     facultyId: "as_dep",
     imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     salaryRange: {
       junior: "160 000",
       middle: "380 000",
@@ -277,6 +311,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specStandardDesc",
     facultyId: "as_dep",
     imageUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     salaryRange: {
       junior: "150 000",
       middle: "300 000",
@@ -292,6 +328,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specBusinessManagementDesc",
     facultyId: "sc_business",
     imageUrl: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 85,
     subjectsKeys: ["specManagementLearn1", "specManagementLearn2", "specManagementLearn3"],
     salaryRange: {
       junior: "200 000",
@@ -306,6 +344,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specAccountingDesc",
     facultyId: "sc_business",
     imageUrl: require("../assets/accounting.jpg"),
+    subjectKey: "subjectMathGeo",
+    minScore: 82,
     subjectsKeys: ["specAccountingLearn1", "specAccountingLearn2", "specAccountingLearn3"],
     careerKeys: ["specAccountingCareer1", "specAccountingCareer2"],
     salaryRange: {
@@ -321,6 +361,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specFinancingDesc",
     facultyId: "sc_business",
     imageUrl: require("../assets/finance.jpg"),
+    subjectKey: "subjectMathGeo",
+    minScore: 85,
     salaryRange: {
       junior: "190 000",
       middle: "450 000",
@@ -334,6 +376,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specSMMDesc",
     facultyId: "sc_business",
     imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 80,
     salaryRange: {
       junior: "150 000",
       middle: "350 000",
@@ -347,6 +391,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specEconomicsDesc",
     facultyId: "sc_business",
     imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 85,
     subjectsKeys: ["specEconomicsLearn1", "specEconomicsLearn2", "specEconomicsLearn3"],
     salaryRange: {
       junior: "180 000",
@@ -361,6 +407,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specGovFinDesc",
     facultyId: "sc_business",
     imageUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 80,
     salaryRange: {
       junior: "140 000",
       middle: "300 000",
@@ -376,6 +424,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specEcologyDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/ecology.jpg"),
+    subjectKey: "subjectBioChem",
+    minScore: 75,
     salaryRange: {
       junior: "150 000",
       middle: "320 000",
@@ -389,6 +439,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMiningDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/mining.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     subjectsKeys: ["specMiningLearn1", "specMiningLearn2", "specMiningLearn3"],
     salaryRange: {
       junior: "250 000",
@@ -403,6 +455,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specGeologyDesc",
     facultyId: "fnoz",
     imageUrl: "https://images.unsplash.com/photo-1525498128493-380d1990a112?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 80,
     salaryRange: {
       junior: "220 000",
       middle: "500 000",
@@ -416,6 +470,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specGeodesyDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/geodesy.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 80,
     subjectsKeys: ["specGeodesyLearn1", "specGeodesyLearn2", "specGeodesyLearn3"],
     salaryRange: {
       junior: "180 000",
@@ -430,6 +486,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specLandDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/land.jpg"),
+    subjectKey: "subjectMathGeo",
+    minScore: 75,
     salaryRange: {
       junior: "140 000",
       middle: "280 000",
@@ -443,6 +501,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specSeismologyDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/seismology.png"),
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     salaryRange: {
       junior: "160 000",
       middle: "350 000",
@@ -456,6 +516,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specForestDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/campus.jpg"),
+    subjectKey: "subjectBioGeo",
+    minScore: 70,
     salaryRange: {
       junior: "120 000",
       middle: "250 000",
@@ -469,6 +531,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specEnvironmentDesc",
     facultyId: "fnoz",
     imageUrl: require("../assets/ecology.jpg"),
+    subjectKey: "subjectBioGeo",
+    minScore: 75,
     subjectsKeys: ["specSafetyLearn1", "specSafetyLearn2", "specSafetyLearn3"],
     salaryRange: {
       junior: "150 000",
@@ -483,6 +547,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specEMDesc",
     facultyId: "fnoz",
     imageUrl: "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 75,
     salaryRange: {
       junior: "170 000",
       middle: "350 000",
@@ -498,6 +564,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specTechPhysicsDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/tech-physics.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     salaryRange: {
       junior: "200 000",
       middle: "450 000",
@@ -511,6 +579,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specSmartTransportDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/smart-tech.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     salaryRange: {
       junior: "220 000",
       middle: "500 000",
@@ -524,6 +594,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specTransportTechDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/transport.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 80,
     salaryRange: {
       junior: "190 000",
       middle: "420 000",
@@ -537,6 +609,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMiningMechDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/mechanical.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     salaryRange: {
       junior: "250 000",
       middle: "550 000",
@@ -550,6 +624,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specReverseEngDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/reverse-eng.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     subjectsKeys: ["specMechLearn1", "specMechLearn2", "specMechLearn3"],
     salaryRange: {
       junior: "200 000",
@@ -564,6 +640,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMineralDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/mineral.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 80,
     salaryRange: {
       junior: "230 000",
       middle: "550 000",
@@ -577,6 +655,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specLogisticsSmartDesc",
     facultyId: "sc_mecheng",
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathGeo",
+    minScore: 80,
     subjectsKeys: ["specLogisticsLearn1", "specLogisticsLearn2", "specLogisticsLearn3"],
     salaryRange: {
       junior: "170 000",
@@ -591,6 +671,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specChemEngDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/chem-eng.jpg"),
+    subjectKey: "subjectBioChem",
+    minScore: 85,
     salaryRange: {
       junior: "180 000",
       middle: "420 000",
@@ -604,6 +686,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specAgroSystemsDesc",
     facultyId: "sc_mecheng",
     imageUrl: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&q=80&w=800",
+    subjectKey: "subjectMathPhys",
+    minScore: 80,
     salaryRange: {
       junior: "160 000",
       middle: "380 000",
@@ -617,6 +701,8 @@ export const specialties: Specialty[] = [
     descriptionKey: "specMetallurgyDesc",
     facultyId: "sc_mecheng",
     imageUrl: require("../assets/spec-metallurgy.jpg"),
+    subjectKey: "subjectMathPhys",
+    minScore: 85,
     subjectsKeys: ["specMetallurgyLearn1", "specMetallurgyLearn2", "specMetallurgyLearn3"],
     salaryRange: {
       junior: "240 000",

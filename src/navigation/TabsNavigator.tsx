@@ -4,8 +4,8 @@ import { View, Text, StyleSheet, Platform } from "react-native";
 
 import { HomeScreen } from "../screens/HomeScreen";
 import { AdmissionScreen } from "../screens/AdmissionScreen";
-import { DocumentsScreen } from "../screens/DocumentsScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
+import { ChecklistScreen } from "../screens/ChecklistScreen";
 import { SpecialtiesScreen } from "../screens/SpecialtiesScreen";
 import { colors, typography } from "../theme";
 import { useI18n } from "../i18n";
@@ -17,7 +17,7 @@ const tabIcons: Record<keyof RootTabParamList, React.ComponentProps<typeof Ionic
   Home: "home-outline",
   Specialties: "school-outline",
   Admission: "map-outline",
-  Hub: "grid-outline",
+  Checklist: "list-outline",
   Settings: "settings-outline",
 };
 
@@ -28,7 +28,7 @@ export function TabsNavigator() {
     Home: t("navHome"),
     Specialties: t("navSpecialties"),
     Admission: t("navAdmission"),
-    Hub: t("hub"),
+    Checklist: t("checklist"),
     Settings: t("settings"),
   };
 
@@ -74,7 +74,7 @@ export function TabsNavigator() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Specialties" component={SpecialtiesScreen} />
       <Tab.Screen name="Admission" component={AdmissionScreen} />
-      <Tab.Screen name="Hub" component={DocumentsScreen} />
+      <Tab.Screen name="Checklist" component={ChecklistScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
