@@ -40,13 +40,13 @@ export function AuthScreen() {
     setIsLoading(true);
     try {
       if (mode === "login") {
-        await authStore.signIn(email);
+        await authStore.signIn(email, password);
       } else {
-        await authStore.signUp(email);
+        await authStore.signUp(email, password);
       }
       navigation.goBack();
-    } catch (e) {
-      setError("Something went wrong. Please try again.");
+    } catch (e: any) {
+      setError(e.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "194306853157",
+    "project_id": "grantstep-e0d41",
+    "storage_bucket": "grantstep-e0d41.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194306853157:android:b3f38becaf4b21f91b32cc",
+        "android_client_info": {
+          "package_name": "kz.grantstep.ektu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxo8X62VB_XBxbzMuxLZkuj8vLjP-_BJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

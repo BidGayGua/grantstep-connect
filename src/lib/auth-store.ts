@@ -1,8 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useEffect, useSyncExternalStore } from "react";
 
 export type User = {
   email: string;
+  uid: string;
 };
 
 export type AuthState = {
@@ -10,84 +11,78 @@ export type AuthState = {
   isLoggedIn: boolean;
 };
 
-const STORAGE_KEY = "grantstep.auth-state";
-
 const initialState: AuthState = {
   user: null,
   isLoggedIn: false,
 };
 
 let state: AuthState = initialState;
-let hydrated = false;
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((listener) => listener());
 
-async function persist() {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // Demo storage should not break UI
-  }
-}
-
-async function hydrate() {
-  if (hydrated) return;
-  hydrated = true;
-
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as Partial<AuthState>;
-    state = {
-      user: parsed.user ?? initialState.user,
-      isLoggedIn: parsed.isLoggedIn ?? initialState.isLoggedIn,
-    };
-    emit();
-  } catch {
-    state = initialState;
-  }
-}
-
 function update(updater: (current: AuthState) => AuthState) {
   state = updater(state);
   emit();
-  void persist();
 }
+
+// Subscribe to Firebase Auth state changes
+auth().onAuthStateChanged((firebaseUser: FirebaseAuthTypes.User | null) => {
+  if (firebaseUser) {
+    update(() => ({
+      user: {
+        email: firebaseUser.email || "",
+        uid: firebaseUser.uid,
+      },
+      isLoggedIn: true,
+    }));
+  } else {
+    update(() => initialState);
+  }
+});
 
 export const authStore = {
   get: () => state,
   subscribe: (listener: () => void) => {
     listeners.add(listener);
-    void hydrate();
     return () => listeners.delete(listener);
   },
-  signIn: async (email: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    update(() => ({
-      user: { email },
-      isLoggedIn: true,
-    }));
+  signIn: async (email: string, password: string) => {
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+    } catch (error: any) {
+      let message = "An unknown error occurred";
+      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        message = "Неверный email или пароль";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Некорректный email";
+      } else if (error.code === "auth/user-disabled") {
+        message = "Пользователь заблокирован";
+      }
+      throw new Error(message);
+    }
   },
-  signUp: async (email: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    update(() => ({
-      user: { email },
-      isLoggedIn: true,
-    }));
+  signUp: async (email: string, password: string) => {
+    try {
+      await auth().createUserWithEmailAndPassword(email, password);
+    } catch (error: any) {
+      let message = "An unknown error occurred";
+      if (error.code === "auth/email-already-in-use") {
+        message = "Этот email уже используется";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Некорректный email";
+      } else if (error.code === "auth/weak-password") {
+        message = "Слишком слабый пароль";
+      }
+      throw new Error(message);
+    }
   },
-  signOut: () => {
-    update(() => initialState);
+  signOut: async () => {
+    await auth().signOut();
   },
 };
 
 export function useAuth() {
-  useEffect(() => {
-    void hydrate();
-  }, []);
-
   return useSyncExternalStore(
     authStore.subscribe,
     authStore.get,
