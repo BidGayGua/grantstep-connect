@@ -13,4 +13,14 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 rootProject.name = 'GrantStep EKTU'
 
 include ':app'
+
+def addFirebaseModule(String name, String path) {
+    include ":$name"
+    project(":$name").projectDir = new File(rootProject.projectDir, "../node_modules/@react-native-firebase/$path/android")
+}
+
+addFirebaseModule('react-native-firebase_app', 'app')
+addFirebaseModule('react-native-firebase_auth', 'auth')
+addFirebaseModule('react-native-firebase_firestore', 'firestore')
+
 includeBuild("../node_modules/@react-native/gradle-plugin")
